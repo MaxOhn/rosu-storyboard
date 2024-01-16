@@ -1,0 +1,11 @@
+[package]
+name = "rosu-storyboard"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rosu-map = { path = "../rosu-map", features = ["tracing"] }
+thiserror = { version = "1.0.50" }
+
+[dev-dependencies]
+test-log = { version = "0.2.14", default-features = false, features = ["trace"] }

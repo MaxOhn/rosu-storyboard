@@ -29,6 +29,7 @@ mod command_loop;
 mod command_trigger;
 mod decode;
 pub mod element;
+mod encode;
 mod layer;
 mod storyboard;
 mod timeline;

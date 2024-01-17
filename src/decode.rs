@@ -3,7 +3,7 @@ use std::{borrow::Cow, cell::RefCell, cmp, collections::HashMap, rc::Rc, str::Sp
 use rosu_map::{
     section::{
         colors::Color,
-        events::{EventType, ParseEventTypeError},
+        events::{BreakPeriod, EventType, ParseEventTypeError},
     },
     util::{KeyValue, ParseNumber, ParseNumberError, Pos, StrExt},
     DecodeBeatmap, DecodeState,
@@ -36,7 +36,6 @@ pub enum ParseStoryboardError {
 }
 
 pub struct StoryboardState {
-    pub version: i32,
     pub storyboard: Storyboard,
     sprite: PendingSprite,
     timeline_group: Option<Rc<RefCell<CommandTimelineGroup>>>,
@@ -89,6 +88,8 @@ impl StoryboardState {
                 self.storyboard
                     .get_layer("Video")
                     .add(StoryboardElement::new(path, video));
+            } else {
+                self.storyboard.background_file = path;
             }
         }
 
@@ -112,6 +113,10 @@ impl StoryboardState {
         let x = f32::parse_with_limits(x, MAX_COORDINATE_VALUE as f32)?;
         let y = f32::parse_with_limits(y, MAX_COORDINATE_VALUE as f32)?;
         let sprite = StoryboardSprite::new(origin, Pos::new(x, y));
+
+        if self.storyboard.background_file.is_empty() {
+            self.storyboard.background_file = path.clone();
+        }
 
         self.sprite.set_sprite(path, &layer, sprite);
 
@@ -139,7 +144,7 @@ impl StoryboardState {
         let frame_count = i32::parse(frame_count)?;
         let mut frame_delay = f64::parse(frame_delay)?;
 
-        if self.version < 6 {
+        if self.storyboard.format_version < 6 {
             frame_delay = (0.015 * frame_delay).round() * 1.186 * (1000.0 / 60.0);
         }
 
@@ -180,8 +185,34 @@ impl StoryboardState {
         Ok(())
     }
 
+    fn parse_background(
+        &mut self,
+        split: &mut Split<'_, char>,
+    ) -> Result<(), ParseStoryboardError> {
+        let background_file = split.nth(1).ok_or(ParseStoryboardError::InvalidLine)?;
+        self.storyboard.background_file = background_file.clean_filename();
+
+        Ok(())
+    }
+
+    fn parse_break(&mut self, split: &mut Split<'_, char>) -> Result<(), ParseStoryboardError> {
+        let Some((start_time, end_time)) = split.next().zip(split.next()) else {
+            return Err(ParseStoryboardError::InvalidLine);
+        };
+
+        let start_time = f64::parse(start_time)?;
+        let end_time = start_time.max(f64::parse(end_time)?);
+
+        self.storyboard.breaks.push(BreakPeriod {
+            start_time,
+            end_time,
+        });
+
+        Ok(())
+    }
+
     fn parse_trigger(&mut self, split: &mut Split<'_, char>) -> Result<(), ParseStoryboardError> {
-        let Some(trigger_name) = split.next() else {
+        let Some(name) = split.next() else {
             return Err(ParseStoryboardError::InvalidLine);
         };
 
@@ -207,7 +238,7 @@ impl StoryboardState {
             0
         };
 
-        let trigger = sprite.add_trigger(trigger_name.to_owned(), start_time, end_time, group_num);
+        let trigger = sprite.add_trigger(name.to_owned(), start_time, end_time, group_num);
         self.timeline_group = Some(Rc::clone(&trigger.group));
 
         Ok(())
@@ -564,10 +595,12 @@ impl StoryboardState {
 }
 
 impl DecodeState for StoryboardState {
-    fn create(version: i32) -> Self {
+    fn create(format_version: i32) -> Self {
+        let mut storyboard = Storyboard::default();
+        storyboard.format_version = format_version;
+
         Self {
-            version,
-            storyboard: Storyboard::default(),
+            storyboard,
             sprite: PendingSprite::default(),
             timeline_group: None,
             variables: HashMap::default(),
@@ -638,7 +671,9 @@ impl DecodeBeatmap for Storyboard {
                 EventType::Sprite => state.parse_sprite(&mut split),
                 EventType::Animation => state.parse_animation(&mut split),
                 EventType::Sample => state.parse_sample(&mut split),
-                EventType::Background | EventType::Break | EventType::Color => Ok(()),
+                EventType::Background => state.parse_background(&mut split),
+                EventType::Break => state.parse_break(&mut split),
+                EventType::Color => Ok(()),
             };
         }
 

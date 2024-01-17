@@ -5,6 +5,11 @@ use std::{
     str::FromStr,
 };
 
+use rosu_map::{
+    section::events::{BreakPeriod, Events},
+    LATEST_FORMAT_VERSION,
+};
+
 use crate::{
     element::{StoryboardElement, StoryboardElementKind},
     layer::StoryboardLayer,
@@ -12,7 +17,10 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Storyboard {
+    pub format_version: i32,
     pub use_skin_sprites: bool,
+    pub background_file: String,
+    pub breaks: Vec<BreakPeriod>,
     layers: HashMap<String, StoryboardLayer>,
     min_layer_depth: i32,
 }
@@ -39,6 +47,10 @@ impl Storyboard {
         let layer = StoryboardLayer::new(name.to_owned(), self.min_layer_depth, true);
 
         self.layers.entry(name.to_owned()).or_insert(layer)
+    }
+
+    pub fn try_get_layer(&self, name: &str) -> Option<&StoryboardLayer> {
+        self.layers.get(name)
     }
 
     pub fn layers(&self) -> Values<'_, String, StoryboardLayer> {
@@ -116,7 +128,15 @@ impl Default for Storyboard {
             StoryboardLayer::new("Overlay".to_owned(), i32::MIN, true),
         );
 
+        let Events {
+            background_file,
+            breaks,
+        } = Events::default();
+
         Self {
+            format_version: LATEST_FORMAT_VERSION,
+            background_file,
+            breaks,
             use_skin_sprites: Default::default(),
             min_layer_depth: 0,
             layers,

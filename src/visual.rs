@@ -1,3 +1,4 @@
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Origins {
     TopLeft,
     Centre,
@@ -50,6 +51,23 @@ impl Origins {
             Origins::BottomLeft => Anchor::BOTTOM_LEFT,
             Origins::BottomRight => Anchor::BOTTOM_RIGHT,
             Origins::Custom => Anchor::TOP_LEFT,
+        }
+    }
+}
+
+impl From<Anchor> for Origins {
+    fn from(anchor: Anchor) -> Self {
+        match anchor {
+            Anchor::TOP_LEFT => Self::TopLeft,
+            Anchor::TOP_CENTER => Self::TopCentre,
+            Anchor::TOP_RIGHT => Self::TopRight,
+            Anchor::CENTER_LEFT => Self::CentreLeft,
+            Anchor::CENTER => Self::Centre,
+            Anchor::CENTER_RIGHT => Self::CentreRight,
+            Anchor::BOTTOM_LEFT => Self::BottomLeft,
+            Anchor::BOTTOM_CENTER => Self::BottomCentre,
+            Anchor::BOTTOM_RIGHT => Self::BottomRight,
+            _ => Self::Custom,
         }
     }
 }

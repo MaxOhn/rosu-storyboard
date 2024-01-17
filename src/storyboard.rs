@@ -51,7 +51,7 @@ impl Storyboard {
             .filter_map(|elem| match elem.kind {
                 StoryboardElementKind::Animation(ref elem) => Some(elem.start_time()),
                 StoryboardElementKind::Sample(ref elem) => Some(elem.start_time),
-                StoryboardElementKind::Sprite(ref elem) => Some(elem.borrow().start_time()),
+                StoryboardElementKind::Sprite(ref elem) => Some(elem.start_time()),
                 StoryboardElementKind::Video(_) => None,
             })
             .min_by(f64::total_cmp)
@@ -63,7 +63,7 @@ impl Storyboard {
             .filter_map(|elem| match elem.kind {
                 StoryboardElementKind::Animation(ref elem) => Some(elem.end_time()),
                 StoryboardElementKind::Sample(ref elem) => Some(elem.start_time),
-                StoryboardElementKind::Sprite(ref elem) => Some(elem.borrow().end_time()),
+                StoryboardElementKind::Sprite(ref elem) => Some(elem.end_time()),
                 StoryboardElementKind::Video(_) => None,
             })
             .max_by(f64::total_cmp)

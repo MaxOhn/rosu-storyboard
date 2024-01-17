@@ -1,5 +1,3 @@
-use std::{cell::RefCell, rc::Rc};
-
 use rosu_map::util::Pos;
 
 use crate::visual::Anchor;
@@ -8,7 +6,7 @@ use super::StoryboardSprite;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct StoryboardAnimation {
-    pub sprite: Rc<RefCell<StoryboardSprite>>,
+    pub sprite: StoryboardSprite,
     pub frame_count: i32,
     pub frame_delay: f64,
     pub loop_kind: AnimationLoopType,
@@ -23,7 +21,7 @@ impl StoryboardAnimation {
         loop_kind: AnimationLoopType,
     ) -> Self {
         Self {
-            sprite: Rc::new(RefCell::new(StoryboardSprite::new(origin, initial_pos))),
+            sprite: StoryboardSprite::new(origin, initial_pos),
             frame_count,
             frame_delay,
             loop_kind,
@@ -31,27 +29,27 @@ impl StoryboardAnimation {
     }
 
     pub fn has_commands(&self) -> bool {
-        self.sprite.borrow().has_commands()
+        self.sprite.has_commands()
     }
 
     pub fn is_drawable(&self) -> bool {
-        self.sprite.borrow().is_drawable()
+        self.sprite.is_drawable()
     }
 
     pub fn start_time(&self) -> f64 {
-        self.sprite.borrow().start_time()
+        self.sprite.start_time()
     }
 
     pub fn earliest_transform_time(&self) -> f64 {
-        self.sprite.borrow().earliest_transform_time()
+        self.sprite.earliest_transform_time()
     }
 
     pub fn end_time(&self) -> f64 {
-        self.sprite.borrow().end_time()
+        self.sprite.end_time()
     }
 
     pub fn end_time_for_display(&self) -> f64 {
-        self.sprite.borrow().end_time_for_display()
+        self.sprite.end_time_for_display()
     }
 }
 

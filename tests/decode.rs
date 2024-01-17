@@ -79,8 +79,6 @@ fn decode_events() {
         panic!("expected sprite");
     };
 
-    let sprite = sprite.borrow();
-
     assert!(sprite.has_commands());
     assert_eq!(sprite.initial_pos, Pos::new(320.0, 240.0));
     assert!(sprite.is_drawable());
@@ -101,13 +99,10 @@ fn decode_events() {
     assert_eq!(animation.frame_count, 10);
     assert_eq_f64(animation.frame_delay, 30.0);
     assert!(animation.has_commands());
-    assert_eq!(
-        animation.sprite.borrow().initial_pos,
-        Pos::new(320.0, 240.0)
-    );
+    assert_eq!(animation.sprite.initial_pos, Pos::new(320.0, 240.0));
     assert!(animation.is_drawable());
     assert_eq!(animation.loop_kind, AnimationLoopType::LoopForever);
-    assert_eq!(animation.sprite.borrow().origin, Anchor::CENTER);
+    assert_eq!(animation.sprite.origin, Anchor::CENTER);
     assert_eq!(elem.path, "SB/red jitter/red_0000.jpg");
     assert_eq_f64(animation.start_time(), 78993.0);
 }
@@ -194,7 +189,7 @@ fn decode_variable_with_suffix() {
         }
     };
 
-    assert_eq_f32(sprite.borrow().initial_pos.x, 3456.0);
+    assert_eq_f32(sprite.initial_pos.x, 3456.0);
 }
 
 #[test]

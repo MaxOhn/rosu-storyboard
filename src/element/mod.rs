@@ -1,5 +1,3 @@
-use std::{cell::RefCell, rc::Rc};
-
 pub use self::{
     animation::{AnimationLoopType, StoryboardAnimation},
     sample::StoryboardSample,
@@ -43,7 +41,7 @@ impl StoryboardElement {
 pub enum StoryboardElementKind {
     Animation(StoryboardAnimation),
     Sample(StoryboardSample),
-    Sprite(Rc<RefCell<StoryboardSprite>>),
+    Sprite(StoryboardSprite),
     Video(StoryboardVideo),
 }
 
@@ -57,21 +55,16 @@ macro_rules! from_elem_kind {
     };
 }
 
-impl From<Rc<RefCell<StoryboardSprite>>> for StoryboardElementKind {
-    fn from(from: Rc<RefCell<StoryboardSprite>>) -> Self {
-        Self::Sprite(from)
-    }
-}
-
 from_elem_kind!(StoryboardAnimation, Animation);
 from_elem_kind!(StoryboardSample, Sample);
+from_elem_kind!(StoryboardSprite, Sprite);
 from_elem_kind!(StoryboardVideo, Video);
 
 impl StoryboardElementKind {
     pub fn is_drawable(&self) -> bool {
         match self {
             StoryboardElementKind::Animation(ref elem) => elem.is_drawable(),
-            StoryboardElementKind::Sprite(ref elem) => elem.borrow().is_drawable(),
+            StoryboardElementKind::Sprite(ref elem) => elem.is_drawable(),
             StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => true,
         }
     }
@@ -80,7 +73,7 @@ impl StoryboardElementKind {
         match self {
             StoryboardElementKind::Animation(elem) => elem.start_time(),
             StoryboardElementKind::Sample(elem) => elem.start_time,
-            StoryboardElementKind::Sprite(elem) => elem.borrow().start_time(),
+            StoryboardElementKind::Sprite(elem) => elem.start_time(),
             StoryboardElementKind::Video(elem) => elem.start_time,
         }
     }
@@ -89,7 +82,7 @@ impl StoryboardElementKind {
         match self {
             StoryboardElementKind::Animation(elem) => elem.end_time(),
             StoryboardElementKind::Sample(elem) => elem.start_time,
-            StoryboardElementKind::Sprite(elem) => elem.borrow().end_time(),
+            StoryboardElementKind::Sprite(elem) => elem.end_time(),
             StoryboardElementKind::Video(elem) => elem.start_time,
         }
     }

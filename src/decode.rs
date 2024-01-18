@@ -11,10 +11,11 @@ use rosu_map::{
 
 use crate::{
     element::{
-        AnimationLoopType, StoryboardAnimation, StoryboardElement, StoryboardSample,
-        StoryboardSprite, StoryboardVideo,
+        AnimationLoopType, StoryboardAnimationInternal, StoryboardElementInternal,
+        StoryboardElementKindInternal, StoryboardSample, StoryboardSpriteInternal, StoryboardVideo,
     },
     layer::StoryLayer,
+    storyboard::StoryboardInternal,
     timeline_group::CommandTimelineGroup,
     visual::{BlendingParameters, Easing, Origins},
     Storyboard,
@@ -37,7 +38,11 @@ pub enum ParseStoryboardError {
 
 /// The parsing state for [`Storyboard`] in [`DecodeBeatmap`].
 pub struct StoryboardState {
-    storyboard: Storyboard,
+    format_version: i32,
+    use_skin_sprites: bool,
+    background_file: String,
+    breaks: Vec<BreakPeriod>,
+    storyboard: StoryboardInternal,
     sprite: PendingSprite,
     timeline_group: Option<Rc<RefCell<CommandTimelineGroup>>>,
     variables: HashMap<Box<str>, Box<str>>,
@@ -88,9 +93,13 @@ impl StoryboardState {
                 let video = StoryboardVideo::new(f64::from(offset));
                 self.storyboard
                     .get_layer("Video")
-                    .add(StoryboardElement::new(path, video));
+                    .elements
+                    .push(StoryboardElementInternal {
+                        path,
+                        kind: StoryboardElementKindInternal::Video(video),
+                    });
             } else {
-                self.storyboard.background_file = path;
+                self.background_file = path;
             }
         }
 
@@ -113,10 +122,10 @@ impl StoryboardState {
         let path = path.clean_filename();
         let x = f32::parse_with_limits(x, MAX_COORDINATE_VALUE as f32)?;
         let y = f32::parse_with_limits(y, MAX_COORDINATE_VALUE as f32)?;
-        let sprite = StoryboardSprite::new(origin, Pos::new(x, y));
+        let sprite = StoryboardSpriteInternal::new(origin, Pos::new(x, y));
 
-        if self.storyboard.background_file.is_empty() {
-            self.storyboard.background_file = path.clone();
+        if self.background_file.is_empty() {
+            self.background_file = path.clone();
         }
 
         self.sprite.set_sprite(path, &layer, sprite);
@@ -145,7 +154,7 @@ impl StoryboardState {
         let frame_count = i32::parse(frame_count)?;
         let mut frame_delay = f64::parse(frame_delay)?;
 
-        if self.storyboard.format_version < 6 {
+        if self.format_version < 6 {
             frame_delay = (0.015 * frame_delay).round() * 1.186 * (1000.0 / 60.0);
         }
 
@@ -155,8 +164,13 @@ impl StoryboardState {
             AnimationLoopType::LoopForever
         };
 
-        let animation =
-            StoryboardAnimation::new(origin, Pos::new(x, y), frame_count, frame_delay, loop_type);
+        let animation = StoryboardAnimationInternal::new(
+            origin,
+            Pos::new(x, y),
+            frame_count,
+            frame_delay,
+            loop_type,
+        );
 
         self.sprite.set_animation(path, &layer, animation);
 
@@ -181,7 +195,11 @@ impl StoryboardState {
         let sample = StoryboardSample::new(time, volume as i32);
         self.storyboard
             .get_layer(layer.as_str())
-            .add(StoryboardElement::new(path, sample));
+            .elements
+            .push(StoryboardElementInternal {
+                path,
+                kind: StoryboardElementKindInternal::Sample(sample),
+            });
 
         Ok(())
     }
@@ -191,7 +209,7 @@ impl StoryboardState {
         split: &mut Split<'_, char>,
     ) -> Result<(), ParseStoryboardError> {
         let background_file = split.nth(1).ok_or(ParseStoryboardError::InvalidLine)?;
-        self.storyboard.background_file = background_file.clean_filename();
+        self.background_file = background_file.clean_filename();
 
         Ok(())
     }
@@ -204,7 +222,7 @@ impl StoryboardState {
         let start_time = f64::parse(start_time)?;
         let end_time = start_time.max(f64::parse(end_time)?);
 
-        self.storyboard.breaks.push(BreakPeriod {
+        self.breaks.push(BreakPeriod {
             start_time,
             end_time,
         });
@@ -597,11 +615,17 @@ impl StoryboardState {
 
 impl DecodeState for StoryboardState {
     fn create(format_version: i32) -> Self {
-        let mut storyboard = Storyboard::default();
-        storyboard.format_version = format_version;
+        let storyboard = Storyboard {
+            format_version,
+            ..Default::default()
+        };
 
         Self {
-            storyboard,
+            format_version: storyboard.format_version,
+            use_skin_sprites: storyboard.use_skin_sprites,
+            background_file: storyboard.background_file,
+            breaks: storyboard.breaks,
+            storyboard: StoryboardInternal::default(),
             sprite: PendingSprite::default(),
             timeline_group: None,
             variables: HashMap::default(),
@@ -613,7 +637,20 @@ impl From<StoryboardState> for Storyboard {
     fn from(mut state: StoryboardState) -> Self {
         state.sprite.add(&mut state.storyboard);
 
-        state.storyboard
+        // drop the Rc so that the Rcs in the layers are unique
+        state.timeline_group = None;
+
+        let min_layer_depth = state.storyboard.min_layer_depth;
+        let layers = state.storyboard.convert_layers();
+
+        Storyboard {
+            format_version: state.format_version,
+            use_skin_sprites: state.use_skin_sprites,
+            background_file: state.background_file,
+            breaks: state.breaks,
+            layers,
+            min_layer_depth,
+        }
     }
 }
 
@@ -631,7 +668,7 @@ impl DecodeBeatmap for Storyboard {
         let mut split = line.trim_comment().split(':').map(str::trim);
 
         if split.next() == Some("UseSkinSprites") {
-            state.storyboard.use_skin_sprites = split.next() == Some("1");
+            state.use_skin_sprites = split.next() == Some("1");
         }
 
         Ok(())
@@ -775,11 +812,15 @@ impl DecodeBeatmap for Storyboard {
     }
 }
 
+// Prevent access of fields by abstracting through a module
 mod pending {
     use crate::{
-        element::{StoryboardAnimation, StoryboardElement, StoryboardSprite},
+        element::{
+            StoryboardAnimationInternal, StoryboardElementInternal, StoryboardElementKindInternal,
+            StoryboardSpriteInternal,
+        },
         layer::StoryLayer,
-        Storyboard,
+        storyboard::StoryboardInternal,
     };
 
     #[derive(Default)]
@@ -790,7 +831,7 @@ mod pending {
             &mut self,
             path: String,
             layer: &StoryLayer<'_>,
-            sprite: StoryboardSprite,
+            sprite: StoryboardSpriteInternal,
         ) {
             self.0 = Some(PendingSpriteInner {
                 path,
@@ -803,7 +844,7 @@ mod pending {
             &mut self,
             path: String,
             layer: &StoryLayer<'_>,
-            animation: StoryboardAnimation,
+            animation: StoryboardAnimationInternal,
         ) {
             self.0 = Some(PendingSpriteInner {
                 path,
@@ -812,27 +853,35 @@ mod pending {
             });
         }
 
-        pub fn add(&mut self, storyboard: &mut Storyboard) {
+        pub fn add(&mut self, storyboard: &mut StoryboardInternal) {
             let Some(inner) = self.0.take() else { return };
 
             match inner.kind {
                 PendingSpriteKind::Animation(animation) => storyboard
                     .get_layer(inner.layer.as_ref())
-                    .add(StoryboardElement::new(inner.path, animation)),
+                    .elements
+                    .push(StoryboardElementInternal {
+                        path: inner.path,
+                        kind: StoryboardElementKindInternal::Animation(animation),
+                    }),
                 PendingSpriteKind::Sprite(sprite) => storyboard
                     .get_layer(inner.layer.as_ref())
-                    .add(StoryboardElement::new(inner.path, sprite)),
+                    .elements
+                    .push(StoryboardElementInternal {
+                        path: inner.path,
+                        kind: StoryboardElementKindInternal::Sprite(sprite),
+                    }),
             }
         }
 
-        pub fn inner(&self) -> Option<&StoryboardSprite> {
+        pub fn inner(&self) -> Option<&StoryboardSpriteInternal> {
             self.0.as_ref().map(|inner| match inner.kind {
                 PendingSpriteKind::Animation(ref animation) => &animation.sprite,
                 PendingSpriteKind::Sprite(ref sprite) => sprite,
             })
         }
 
-        pub fn inner_mut(&mut self) -> Option<&mut StoryboardSprite> {
+        pub fn inner_mut(&mut self) -> Option<&mut StoryboardSpriteInternal> {
             self.0.as_mut().map(|inner| match inner.kind {
                 PendingSpriteKind::Animation(ref mut animation) => &mut animation.sprite,
                 PendingSpriteKind::Sprite(ref mut sprite) => sprite,
@@ -847,7 +896,7 @@ mod pending {
     }
 
     enum PendingSpriteKind {
-        Animation(StoryboardAnimation),
-        Sprite(StoryboardSprite),
+        Animation(StoryboardAnimationInternal),
+        Sprite(StoryboardSpriteInternal),
     }
 }

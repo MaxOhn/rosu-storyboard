@@ -1,9 +1,4 @@
-use std::{
-    collections::{hash_map::Values, HashMap},
-    io,
-    path::Path,
-    str::FromStr,
-};
+use std::{collections::HashMap, io, path::Path, str::FromStr};
 
 use rosu_map::{
     section::events::{BreakPeriod, Events},
@@ -12,7 +7,7 @@ use rosu_map::{
 
 use crate::{
     element::{StoryboardElement, StoryboardElementKind},
-    layer::StoryboardLayer,
+    layer::{StoryboardLayer, StoryboardLayerInternal},
 };
 
 /// The storyboard of a beatmap.
@@ -22,8 +17,8 @@ pub struct Storyboard {
     pub use_skin_sprites: bool,
     pub background_file: String,
     pub breaks: Vec<BreakPeriod>,
-    layers: HashMap<String, StoryboardLayer>,
-    min_layer_depth: i32,
+    pub layers: HashMap<String, StoryboardLayer>,
+    pub(crate) min_layer_depth: i32,
 }
 
 impl Storyboard {
@@ -48,7 +43,7 @@ impl Storyboard {
         }
 
         self.min_layer_depth -= 1;
-        let layer = StoryboardLayer::new(name.to_owned(), self.min_layer_depth, true);
+        let layer = StoryboardLayer::new(self.min_layer_depth, true);
 
         self.layers.entry(name.to_owned()).or_insert(layer)
     }
@@ -60,13 +55,9 @@ impl Storyboard {
         self.layers.get(name)
     }
 
-    /// Return an [`Iterator`] over all current [`StoryboardLayer`]s.
-    pub fn layers(&self) -> Values<'_, String, StoryboardLayer> {
-        self.layers.values()
-    }
-
     pub fn earliest_event_time(&self) -> Option<f64> {
-        self.layers()
+        self.layers
+            .values()
             .flat_map(|layer| layer.elements.iter())
             .filter_map(|elem| match elem.kind {
                 StoryboardElementKind::Animation(ref elem) => Some(elem.start_time()),
@@ -78,7 +69,8 @@ impl Storyboard {
     }
 
     pub fn latest_event_time(&self) -> Option<f64> {
-        self.layers()
+        self.layers
+            .values()
             .flat_map(|layer| layer.elements.iter())
             .filter_map(|elem| match elem.kind {
                 StoryboardElementKind::Animation(ref elem) => Some(elem.end_time()),
@@ -90,7 +82,8 @@ impl Storyboard {
     }
 
     pub fn has_drawable(&self) -> bool {
-        self.layers()
+        self.layers
+            .values()
             .flat_map(|layer| layer.elements.iter())
             .any(StoryboardElement::is_drawable)
     }
@@ -100,41 +93,24 @@ impl Default for Storyboard {
     fn default() -> Self {
         let mut layers = HashMap::new();
 
-        layers.insert(
-            "Video".to_owned(),
-            StoryboardLayer::new("Video".to_owned(), 4, false),
-        );
-
-        layers.insert(
-            "Background".to_owned(),
-            StoryboardLayer::new("Background".to_owned(), 3, true),
-        );
-
+        layers.insert("Video".to_owned(), StoryboardLayer::new(4, false));
+        layers.insert("Background".to_owned(), StoryboardLayer::new(3, true));
         layers.insert(
             "Fail".to_owned(),
             StoryboardLayer {
                 visible_when_passing: false,
-                ..StoryboardLayer::new("Fail".to_owned(), 2, true)
+                ..StoryboardLayer::new(2, true)
             },
         );
-
         layers.insert(
             "Pass".to_owned(),
             StoryboardLayer {
                 visible_when_failing: false,
-                ..StoryboardLayer::new("Pass".to_owned(), 1, true)
+                ..StoryboardLayer::new(1, true)
             },
         );
-
-        layers.insert(
-            "Foreground".to_owned(),
-            StoryboardLayer::new("Foreground".to_owned(), 0, true),
-        );
-
-        layers.insert(
-            "Overlay".to_owned(),
-            StoryboardLayer::new("Overlay".to_owned(), i32::MIN, true),
-        );
+        layers.insert("Foreground".to_owned(), StoryboardLayer::new(0, true));
+        layers.insert("Overlay".to_owned(), StoryboardLayer::new(i32::MIN, true));
 
         let Events {
             background_file,
@@ -157,5 +133,61 @@ impl FromStr for Storyboard {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         rosu_map::from_str(s)
+    }
+}
+
+pub(crate) struct StoryboardInternal {
+    pub layers: HashMap<String, StoryboardLayerInternal>,
+    pub min_layer_depth: i32,
+}
+
+impl StoryboardInternal {
+    pub fn get_layer(&mut self, name: &str) -> &mut StoryboardLayerInternal {
+        // Workaround for NLL
+        // See <https://github.com/rust-lang/rust/issues/43234>
+        if self.layers.contains_key(name) {
+            return self.layers.get_mut(name).unwrap();
+        }
+
+        self.min_layer_depth -= 1;
+        let layer = StoryboardLayerInternal::new(self.min_layer_depth, true);
+
+        self.layers.entry(name.to_owned()).or_insert(layer)
+    }
+
+    pub fn convert_layers(self) -> HashMap<String, StoryboardLayer> {
+        self.layers
+            .into_iter()
+            .map(|(name, layer)| (name, layer.into()))
+            .collect()
+    }
+}
+
+impl Default for StoryboardInternal {
+    fn default() -> Self {
+        let storyboard = Storyboard::default();
+
+        let layers = storyboard
+            .layers
+            .into_iter()
+            .map(|(name, layer)| {
+                debug_assert!(layer.elements.is_empty());
+
+                let layer = StoryboardLayerInternal {
+                    depth: layer.depth,
+                    masking: layer.masking,
+                    visible_when_passing: layer.visible_when_passing,
+                    visible_when_failing: layer.visible_when_failing,
+                    elements: Vec::new(),
+                };
+
+                (name, layer)
+            })
+            .collect();
+
+        Self {
+            layers,
+            min_layer_depth: storyboard.min_layer_depth,
+        }
     }
 }

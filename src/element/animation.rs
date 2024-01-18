@@ -2,7 +2,7 @@ use rosu_map::util::Pos;
 
 use crate::visual::Anchor;
 
-use super::StoryboardSprite;
+use super::{StoryboardSprite, StoryboardSpriteInternal};
 
 /// An animation [`StoryboardElement`].
 ///
@@ -73,6 +73,41 @@ impl AnimationLoopType {
                 "LoopOnce" => Self::LoopOnce,
                 _ => Self::LoopForever,
             },
+        }
+    }
+}
+
+pub(crate) struct StoryboardAnimationInternal {
+    pub sprite: StoryboardSpriteInternal,
+    pub frame_count: i32,
+    pub frame_delay: f64,
+    pub loop_kind: AnimationLoopType,
+}
+
+impl From<StoryboardAnimationInternal> for StoryboardAnimation {
+    fn from(animation: StoryboardAnimationInternal) -> Self {
+        Self {
+            sprite: animation.sprite.into(),
+            frame_count: animation.frame_count,
+            frame_delay: animation.frame_delay,
+            loop_kind: animation.loop_kind,
+        }
+    }
+}
+
+impl StoryboardAnimationInternal {
+    pub fn new(
+        origin: Anchor,
+        initial_pos: Pos,
+        frame_count: i32,
+        frame_delay: f64,
+        loop_kind: AnimationLoopType,
+    ) -> Self {
+        Self {
+            sprite: StoryboardSpriteInternal::new(origin, initial_pos),
+            frame_count,
+            frame_delay,
+            loop_kind,
         }
     }
 }

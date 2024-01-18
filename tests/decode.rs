@@ -14,40 +14,57 @@ fn decode_events() {
     .unwrap();
 
     assert!(storyboard.has_drawable());
-    assert_eq!(storyboard.layers().count(), 6);
+    assert_eq!(storyboard.layers.len(), 6);
 
-    let background = storyboard.layers().find(|layer| layer.depth == 3).unwrap();
+    let (name, background) = storyboard
+        .layers
+        .iter()
+        .find(|(_, layer)| layer.depth == 3)
+        .unwrap();
     assert_eq!(background.elements.len(), 16);
     assert!(background.visible_when_failing);
     assert!(background.visible_when_passing);
-    assert_eq!(background.name, "Background");
+    assert_eq!(name, "Background");
 
-    let fail = storyboard.layers().find(|layer| layer.depth == 2).unwrap();
+    let (name, fail) = storyboard
+        .layers
+        .iter()
+        .find(|(_, layer)| layer.depth == 2)
+        .unwrap();
     assert!(fail.elements.is_empty());
     assert!(fail.visible_when_failing);
     assert!(!fail.visible_when_passing);
-    assert_eq!(fail.name, "Fail");
+    assert_eq!(name, "Fail");
 
-    let pass = storyboard.layers().find(|layer| layer.depth == 1).unwrap();
+    let (name, pass) = storyboard
+        .layers
+        .iter()
+        .find(|(_, layer)| layer.depth == 1)
+        .unwrap();
     assert!(pass.elements.is_empty());
     assert!(!pass.visible_when_failing);
     assert!(pass.visible_when_passing);
-    assert_eq!(pass.name, "Pass");
+    assert_eq!(name, "Pass");
 
-    let foreground = storyboard.layers().find(|layer| layer.depth == 0).unwrap();
+    let (name, foreground) = storyboard
+        .layers
+        .iter()
+        .find(|(_, layer)| layer.depth == 0)
+        .unwrap();
     assert_eq!(foreground.elements.len(), 151);
     assert!(foreground.visible_when_failing);
     assert!(foreground.visible_when_passing);
-    assert_eq!(foreground.name, "Foreground");
+    assert_eq!(name, "Foreground");
 
-    let overlay = storyboard
-        .layers()
-        .find(|layer| layer.depth == i32::MIN)
+    let (name, overlay) = storyboard
+        .layers
+        .iter()
+        .find(|(_, layer)| layer.depth == i32::MIN)
         .unwrap();
     assert!(overlay.elements.is_empty());
     assert!(overlay.visible_when_failing);
     assert!(overlay.visible_when_passing);
-    assert_eq!(overlay.name, "Overlay");
+    assert_eq!(name, "Overlay");
 
     let sprite_count = background
         .elements
@@ -112,7 +129,11 @@ fn loop_without_explicit_fadeout() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/animation-loop-no-explicit-end-time.osb").unwrap();
 
-    let background = storyboard.layers().find(|layer| layer.depth == 3).unwrap();
+    let background = storyboard
+        .layers
+        .values()
+        .find(|layer| layer.depth == 3)
+        .unwrap();
 
     assert_eq!(background.elements.len(), 1);
 
@@ -133,7 +154,11 @@ fn correct_animation_start_time() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/animation-starts-before-alpha.osb").unwrap();
 
-    let background = storyboard.layers().find(|layer| layer.depth == 3).unwrap();
+    let background = storyboard
+        .layers
+        .values()
+        .find(|layer| layer.depth == 3)
+        .unwrap();
 
     assert_eq!(background.elements.len(), 1);
 
@@ -151,7 +176,11 @@ fn out_of_order_start_times() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/out-of-order-starttimes.osb").unwrap();
 
-    let background = storyboard.layers().find(|layer| layer.depth == 3).unwrap();
+    let background = storyboard
+        .layers
+        .values()
+        .find(|layer| layer.depth == 3)
+        .unwrap();
 
     assert_eq!(background.elements.len(), 2);
     assert_eq_f64(background.elements[0].start_time(), 1500.0);
@@ -165,7 +194,11 @@ fn earliest_start_time_with_loop_alphas() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/loop-containing-earlier-non-zero-fade.osb").unwrap();
 
-    let background = storyboard.layers().find(|layer| layer.depth == 3).unwrap();
+    let background = storyboard
+        .layers
+        .values()
+        .find(|layer| layer.depth == 3)
+        .unwrap();
 
     assert_eq!(background.elements.len(), 2);
     assert_eq_f64(background.elements[0].start_time(), 1000.0);
@@ -179,7 +212,11 @@ fn decode_variable_with_suffix() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/variable-with-suffix.osb").unwrap();
 
-    let background = storyboard.layers().find(|layer| layer.depth == 3).unwrap();
+    let background = storyboard
+        .layers
+        .values()
+        .find(|layer| layer.depth == 3)
+        .unwrap();
 
     let sprite = match background.elements[0].kind {
         StoryboardElementKind::Animation(ref elem) => &elem.sprite,
@@ -197,11 +234,7 @@ fn decode_video_with_lowercase_extension() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/video-with-lowercase-extension.osb").unwrap();
 
-    let video = storyboard
-        .layers()
-        .find(|layer| layer.name == "Video")
-        .unwrap();
-
+    let video = storyboard.layers.get("Video").unwrap();
     assert_eq!(video.elements.len(), 1);
 
     assert!(matches!(
@@ -217,11 +250,7 @@ fn decode_video_with_uppercase_extension() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/video-with-uppercase-extension.osb").unwrap();
 
-    let video = storyboard
-        .layers()
-        .find(|layer| layer.name == "Video")
-        .unwrap();
-
+    let video = storyboard.layers.get("Video").unwrap();
     assert_eq!(video.elements.len(), 1);
 
     assert!(matches!(
@@ -237,10 +266,7 @@ fn decode_image_specified_as_video() {
     let storyboard: Storyboard =
         rosu_map::from_path("./resources/image-specified-as-video.osb").unwrap();
 
-    let video = storyboard
-        .layers()
-        .find(|layer| layer.name == "Video")
-        .unwrap();
+    let video = storyboard.layers.get("Video").unwrap();
     assert!(video.elements.is_empty());
 }
 
@@ -248,7 +274,11 @@ fn decode_image_specified_as_video() {
 fn decode_out_of_range_loop_animation_type() {
     let storyboard: Storyboard = rosu_map::from_path("./resources/animation-types.osb").unwrap();
 
-    let foreground = storyboard.layers().find(|layer| layer.depth == 0).unwrap();
+    let foreground = storyboard
+        .layers
+        .values()
+        .find(|layer| layer.depth == 0)
+        .unwrap();
 
     let mut animations = foreground.elements.iter().map(|elem| match elem.kind {
         StoryboardElementKind::Animation(ref elem) => elem,
@@ -289,7 +319,11 @@ fn decode_loop_count() {
 
     let storyboard: Storyboard = rosu_map::from_path("./resources/loop-count.osb").unwrap();
 
-    let background = storyboard.layers().find(|layer| layer.depth == 3).unwrap();
+    let background = storyboard
+        .layers
+        .values()
+        .find(|layer| layer.depth == 3)
+        .unwrap();
 
     let zero_times = background
         .elements

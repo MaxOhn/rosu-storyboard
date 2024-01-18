@@ -69,7 +69,8 @@ impl Storyboard {
         }
 
         let video_elems = self
-            .layers()
+            .layers
+            .values()
             .flat_map(|layer| layer.elements.iter())
             .filter_map(|elem| {
                 if let StoryboardElementKind::Video(ref video) = elem.kind {
@@ -101,9 +102,10 @@ impl Storyboard {
         }
 
         let elems = self
-            .layers()
-            .filter_map(|layer| {
-                let int = match layer.name.as_str() {
+            .layers
+            .iter()
+            .filter_map(|(name, layer)| {
+                let int = match name.as_str() {
                     "Background" => 0,
                     "Fail" => 1,
                     "Pass" => 2,
@@ -149,11 +151,11 @@ impl Storyboard {
                 StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => continue,
             };
 
-            write_group(writer, 1, &sprite.timeline_group.borrow())?;
+            write_group(writer, 1, &sprite.timeline_group)?;
 
             for l in sprite.loops.iter() {
                 writeln!(writer, " L,{},{}", l.loop_start_time, l.total_iterations)?;
-                write_group(writer, 2, &l.group.borrow())?;
+                write_group(writer, 2, &l.group)?;
             }
 
             for trigger in sprite.triggers.iter() {
@@ -176,16 +178,17 @@ impl Storyboard {
 
                 writer.write_all(b"\n")?;
 
-                write_group(writer, 2, &trigger.group.borrow())?;
+                write_group(writer, 2, &trigger.group)?;
             }
         }
 
         writer.write_all(b"//Storyboard Sound Samples\n")?;
 
         let samples = self
-            .layers()
-            .filter_map(|layer| {
-                let int = match layer.name.as_str() {
+            .layers
+            .iter()
+            .filter_map(|(name, layer)| {
+                let int = match name.as_str() {
                     "Background" => 0,
                     "Fail" => 1,
                     "Pass" => 2,
@@ -345,7 +348,7 @@ where
     }
 
     impl<'a, T> WriteEndTime<'a, T> {
-        fn new(command: &'a TypedCommand<T>) -> Self {
+        const fn new(command: &'a TypedCommand<T>) -> Self {
             Self { command }
         }
     }
@@ -356,7 +359,7 @@ where
                 if (end_time - start_time).abs() < f64::EPSILON {
                     Ok(())
                 } else {
-                    write!(f, "{}", end_time)
+                    write!(f, "{end_time}")
                 }
             }
 

@@ -1,3 +1,4 @@
+pub(crate) use self::{animation::StoryboardAnimationInternal, sprite::StoryboardSpriteInternal};
 pub use self::{
     animation::{AnimationLoopType, StoryboardAnimation},
     sample::StoryboardSample,
@@ -90,4 +91,34 @@ impl StoryboardElementKind {
             StoryboardElementKind::Video(elem) => elem.start_time,
         }
     }
+}
+
+pub(crate) struct StoryboardElementInternal {
+    pub path: String,
+    pub kind: StoryboardElementKindInternal,
+}
+
+impl From<StoryboardElementInternal> for StoryboardElement {
+    fn from(elem: StoryboardElementInternal) -> Self {
+        Self {
+            path: elem.path,
+            kind: match elem.kind {
+                StoryboardElementKindInternal::Animation(elem) => {
+                    StoryboardElementKind::Animation(elem.into())
+                }
+                StoryboardElementKindInternal::Sample(elem) => StoryboardElementKind::Sample(elem),
+                StoryboardElementKindInternal::Sprite(elem) => {
+                    StoryboardElementKind::Sprite(elem.into())
+                }
+                StoryboardElementKindInternal::Video(elem) => StoryboardElementKind::Video(elem),
+            },
+        }
+    }
+}
+
+pub(crate) enum StoryboardElementKindInternal {
+    Animation(StoryboardAnimationInternal),
+    Sample(StoryboardSample),
+    Sprite(StoryboardSpriteInternal),
+    Video(StoryboardVideo),
 }

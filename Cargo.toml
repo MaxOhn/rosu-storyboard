@@ -2,6 +2,14 @@
 name = "rosu-storyboard"
 version = "0.1.0"
 edition = "2021"
+authors = ["MaxOhn <ohn.m@hotmail.de>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/MaxOhn/rosu-storyboard"
+documentation = "https://docs.rs/rosu-storyboard/"
+description = "Library to de- and encode osu! storyboards"
+keywords = ["osu", "storyboard", "parse", "decode"]
+categories = ["parser-implementations"]
 
 [dependencies]
 rosu-map = { path = "../rosu-map" }

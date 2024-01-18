@@ -25,8 +25,6 @@ fn stability() {
             .encode(&mut bytes)
             .unwrap_or_else(|e| panic!("Failed to encode storyboard {filename:?}: {e:?}"));
 
-        println!("{}\n----", std::str::from_utf8(&bytes).unwrap());
-
         let decoded_after_encode = Storyboard::from_bytes(&bytes).unwrap_or_else(|e| {
             panic!("Failed to decode storyboard after encoding {filename:?}: {e:?}")
         });

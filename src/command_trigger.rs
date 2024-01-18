@@ -2,9 +2,9 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::timeline_group::CommandTimelineGroup;
 
-/// Command trigger for a [`StoryboardSprite`].
+/// Command trigger for a [`Sprite`].
 ///
-/// [`StoryboardSprite`]: crate::element::StoryboardSprite
+/// [`Sprite`]: crate::element::Sprite
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandTrigger {
     pub group: CommandTimelineGroup,

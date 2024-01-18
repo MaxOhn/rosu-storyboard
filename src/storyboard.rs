@@ -6,8 +6,8 @@ use rosu_map::{
 };
 
 use crate::{
-    element::{StoryboardElement, StoryboardElementKind},
-    layer::{StoryboardLayer, StoryboardLayerInternal},
+    element::{Element, ElementKind},
+    layer::{Layer, LayerInternal},
 };
 
 /// The storyboard of a beatmap.
@@ -17,7 +17,7 @@ pub struct Storyboard {
     pub use_skin_sprites: bool,
     pub background_file: String,
     pub breaks: Vec<BreakPeriod>,
-    pub layers: HashMap<String, StoryboardLayer>,
+    pub layers: HashMap<String, Layer>,
     pub(crate) min_layer_depth: i32,
 }
 
@@ -30,12 +30,12 @@ impl Storyboard {
         rosu_map::from_path(path)
     }
 
-    /// Return the [`StoryboardLayer`] with the given name.
+    /// Return the [`Layer`] with the given name.
     ///
     /// If no layer has that name, a new one is created.
     // false positive
     #[allow(clippy::missing_panics_doc)]
-    pub fn get_layer(&mut self, name: &str) -> &mut StoryboardLayer {
+    pub fn get_layer(&mut self, name: &str) -> &mut Layer {
         // Workaround for NLL
         // See <https://github.com/rust-lang/rust/issues/43234>
         if self.layers.contains_key(name) {
@@ -43,15 +43,15 @@ impl Storyboard {
         }
 
         self.min_layer_depth -= 1;
-        let layer = StoryboardLayer::new(self.min_layer_depth, true);
+        let layer = Layer::new(self.min_layer_depth, true);
 
         self.layers.entry(name.to_owned()).or_insert(layer)
     }
 
-    /// Return the [`StoryboardLayer`] with the given name.
+    /// Return the [`Layer`] with the given name.
     ///
     /// If no layer has that name, return `None`.
-    pub fn try_get_layer(&self, name: &str) -> Option<&StoryboardLayer> {
+    pub fn try_get_layer(&self, name: &str) -> Option<&Layer> {
         self.layers.get(name)
     }
 
@@ -60,10 +60,10 @@ impl Storyboard {
             .values()
             .flat_map(|layer| layer.elements.iter())
             .filter_map(|elem| match elem.kind {
-                StoryboardElementKind::Animation(ref elem) => Some(elem.start_time()),
-                StoryboardElementKind::Sample(ref elem) => Some(elem.start_time),
-                StoryboardElementKind::Sprite(ref elem) => Some(elem.start_time()),
-                StoryboardElementKind::Video(_) => None,
+                ElementKind::Animation(ref elem) => Some(elem.start_time()),
+                ElementKind::Sample(ref elem) => Some(elem.start_time),
+                ElementKind::Sprite(ref elem) => Some(elem.start_time()),
+                ElementKind::Video(_) => None,
             })
             .min_by(f64::total_cmp)
     }
@@ -73,10 +73,10 @@ impl Storyboard {
             .values()
             .flat_map(|layer| layer.elements.iter())
             .filter_map(|elem| match elem.kind {
-                StoryboardElementKind::Animation(ref elem) => Some(elem.end_time()),
-                StoryboardElementKind::Sample(ref elem) => Some(elem.start_time),
-                StoryboardElementKind::Sprite(ref elem) => Some(elem.end_time()),
-                StoryboardElementKind::Video(_) => None,
+                ElementKind::Animation(ref elem) => Some(elem.end_time()),
+                ElementKind::Sample(ref elem) => Some(elem.start_time),
+                ElementKind::Sprite(ref elem) => Some(elem.end_time()),
+                ElementKind::Video(_) => None,
             })
             .max_by(f64::total_cmp)
     }
@@ -85,7 +85,7 @@ impl Storyboard {
         self.layers
             .values()
             .flat_map(|layer| layer.elements.iter())
-            .any(StoryboardElement::is_drawable)
+            .any(Element::is_drawable)
     }
 }
 
@@ -93,24 +93,24 @@ impl Default for Storyboard {
     fn default() -> Self {
         let mut layers = HashMap::new();
 
-        layers.insert("Video".to_owned(), StoryboardLayer::new(4, false));
-        layers.insert("Background".to_owned(), StoryboardLayer::new(3, true));
+        layers.insert("Video".to_owned(), Layer::new(4, false));
+        layers.insert("Background".to_owned(), Layer::new(3, true));
         layers.insert(
             "Fail".to_owned(),
-            StoryboardLayer {
+            Layer {
                 visible_when_passing: false,
-                ..StoryboardLayer::new(2, true)
+                ..Layer::new(2, true)
             },
         );
         layers.insert(
             "Pass".to_owned(),
-            StoryboardLayer {
+            Layer {
                 visible_when_failing: false,
-                ..StoryboardLayer::new(1, true)
+                ..Layer::new(1, true)
             },
         );
-        layers.insert("Foreground".to_owned(), StoryboardLayer::new(0, true));
-        layers.insert("Overlay".to_owned(), StoryboardLayer::new(i32::MIN, true));
+        layers.insert("Foreground".to_owned(), Layer::new(0, true));
+        layers.insert("Overlay".to_owned(), Layer::new(i32::MIN, true));
 
         let Events {
             background_file,
@@ -137,12 +137,12 @@ impl FromStr for Storyboard {
 }
 
 pub(crate) struct StoryboardInternal {
-    pub layers: HashMap<String, StoryboardLayerInternal>,
+    pub layers: HashMap<String, LayerInternal>,
     pub min_layer_depth: i32,
 }
 
 impl StoryboardInternal {
-    pub fn get_layer(&mut self, name: &str) -> &mut StoryboardLayerInternal {
+    pub fn get_layer(&mut self, name: &str) -> &mut LayerInternal {
         // Workaround for NLL
         // See <https://github.com/rust-lang/rust/issues/43234>
         if self.layers.contains_key(name) {
@@ -150,12 +150,12 @@ impl StoryboardInternal {
         }
 
         self.min_layer_depth -= 1;
-        let layer = StoryboardLayerInternal::new(self.min_layer_depth, true);
+        let layer = LayerInternal::new(self.min_layer_depth, true);
 
         self.layers.entry(name.to_owned()).or_insert(layer)
     }
 
-    pub fn convert_layers(self) -> HashMap<String, StoryboardLayer> {
+    pub fn convert_layers(self) -> HashMap<String, Layer> {
         self.layers
             .into_iter()
             .map(|(name, layer)| (name, layer.into()))
@@ -173,7 +173,7 @@ impl Default for StoryboardInternal {
             .map(|(name, layer)| {
                 debug_assert!(layer.elements.is_empty());
 
-                let layer = StoryboardLayerInternal {
+                let layer = LayerInternal {
                     depth: layer.depth,
                     masking: layer.masking,
                     visible_when_passing: layer.visible_when_passing,

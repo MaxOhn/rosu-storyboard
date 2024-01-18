@@ -1,6 +1,6 @@
 use rosu_map::util::Pos;
 use rosu_storyboard::{
-    element::{AnimationLoopType, StoryboardElementKind, StoryboardVideo},
+    element::{AnimationLoopType, ElementKind, Video},
     visual::Anchor,
     Storyboard,
 };
@@ -69,19 +69,19 @@ fn decode_events() {
     let sprite_count = background
         .elements
         .iter()
-        .filter(|elem| matches!(elem.kind, StoryboardElementKind::Sprite(_)))
+        .filter(|elem| matches!(elem.kind, ElementKind::Sprite(_)))
         .count();
 
     let animation_count = background
         .elements
         .iter()
-        .filter(|elem| matches!(elem.kind, StoryboardElementKind::Animation(_)))
+        .filter(|elem| matches!(elem.kind, ElementKind::Animation(_)))
         .count();
 
     let sample_count = background
         .elements
         .iter()
-        .filter(|elem| matches!(elem.kind, StoryboardElementKind::Sample(_)))
+        .filter(|elem| matches!(elem.kind, ElementKind::Sample(_)))
         .count();
 
     assert_eq!(sprite_count, 15);
@@ -92,7 +92,7 @@ fn decode_events() {
         sprite_count + animation_count + sample_count
     );
 
-    let StoryboardElementKind::Sprite(ref sprite) = background.elements[0].kind else {
+    let ElementKind::Sprite(ref sprite) = background.elements[0].kind else {
         panic!("expected sprite");
     };
 
@@ -105,10 +105,10 @@ fn decode_events() {
     let elem = background
         .elements
         .iter()
-        .find(|elem| matches!(elem.kind, StoryboardElementKind::Animation(_)))
+        .find(|elem| matches!(elem.kind, ElementKind::Animation(_)))
         .unwrap();
 
-    let StoryboardElementKind::Animation(ref animation) = elem.kind else {
+    let ElementKind::Animation(ref animation) = elem.kind else {
         unreachable!()
     };
 
@@ -139,7 +139,7 @@ fn loop_without_explicit_fadeout() {
 
     assert_eq_f64(background.elements[0].start_time(), 2000.0);
 
-    let StoryboardElementKind::Animation(ref animation) = background.elements[0].kind else {
+    let ElementKind::Animation(ref animation) = background.elements[0].kind else {
         panic!("expected animation");
     };
 
@@ -164,7 +164,7 @@ fn correct_animation_start_time() {
 
     assert_eq_f64(background.elements[0].start_time(), 2000.0);
 
-    let StoryboardElementKind::Animation(ref animation) = background.elements[0].kind else {
+    let ElementKind::Animation(ref animation) = background.elements[0].kind else {
         panic!("expected animation")
     };
 
@@ -219,9 +219,9 @@ fn decode_variable_with_suffix() {
         .unwrap();
 
     let sprite = match background.elements[0].kind {
-        StoryboardElementKind::Animation(ref elem) => &elem.sprite,
-        StoryboardElementKind::Sprite(ref elem) => elem,
-        StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => {
+        ElementKind::Animation(ref elem) => &elem.sprite,
+        ElementKind::Sprite(ref elem) => elem,
+        ElementKind::Sample(_) | ElementKind::Video(_) => {
             panic!("expected sprite")
         }
     };
@@ -237,10 +237,7 @@ fn decode_video_with_lowercase_extension() {
     let video = storyboard.layers.get("Video").unwrap();
     assert_eq!(video.elements.len(), 1);
 
-    assert!(matches!(
-        video.elements[0].kind,
-        StoryboardElementKind::Video(_)
-    ));
+    assert!(matches!(video.elements[0].kind, ElementKind::Video(_)));
 
     assert_eq!(video.elements[0].path, "Video.avi");
 }
@@ -253,10 +250,7 @@ fn decode_video_with_uppercase_extension() {
     let video = storyboard.layers.get("Video").unwrap();
     assert_eq!(video.elements.len(), 1);
 
-    assert!(matches!(
-        video.elements[0].kind,
-        StoryboardElementKind::Video(_)
-    ));
+    assert!(matches!(video.elements[0].kind, ElementKind::Video(_)));
 
     assert_eq!(video.elements[0].path, "Video.AVI");
 }
@@ -281,10 +275,10 @@ fn decode_out_of_range_loop_animation_type() {
         .unwrap();
 
     let mut animations = foreground.elements.iter().map(|elem| match elem.kind {
-        StoryboardElementKind::Animation(ref elem) => elem,
-        StoryboardElementKind::Sample(_)
-        | StoryboardElementKind::Sprite(_)
-        | StoryboardElementKind::Video(_) => panic!("expected animation"),
+        ElementKind::Animation(ref elem) => elem,
+        ElementKind::Sample(_) | ElementKind::Sprite(_) | ElementKind::Video(_) => {
+            panic!("expected animation")
+        }
     });
 
     assert_eq!(
@@ -329,8 +323,8 @@ fn decode_loop_count() {
         .elements
         .iter()
         .filter(|elem| match elem.kind {
-            StoryboardElementKind::Animation(_) | StoryboardElementKind::Sprite(_) => true,
-            StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => false,
+            ElementKind::Animation(_) | ElementKind::Sprite(_) => true,
+            ElementKind::Sample(_) | ElementKind::Video(_) => false,
         })
         .find(|elem| elem.path == "zero-times.png")
         .unwrap();
@@ -340,8 +334,8 @@ fn decode_loop_count() {
         .elements
         .iter()
         .filter(|elem| match elem.kind {
-            StoryboardElementKind::Animation(_) | StoryboardElementKind::Sprite(_) => true,
-            StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => false,
+            ElementKind::Animation(_) | ElementKind::Sprite(_) => true,
+            ElementKind::Sample(_) | ElementKind::Video(_) => false,
         })
         .find(|elem| elem.path == "one-time.png")
         .unwrap();
@@ -351,8 +345,8 @@ fn decode_loop_count() {
         .elements
         .iter()
         .filter(|elem| match elem.kind {
-            StoryboardElementKind::Animation(_) | StoryboardElementKind::Sprite(_) => true,
-            StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => false,
+            ElementKind::Animation(_) | ElementKind::Sprite(_) => true,
+            ElementKind::Sample(_) | ElementKind::Video(_) => false,
         })
         .find(|elem| elem.path == "many-times.png")
         .unwrap();
@@ -369,7 +363,7 @@ fn video_and_background_events_do_not_affect_storyboard_bounds() {
     assert_eq!(elements.len(), 1);
     assert!(matches!(
         elements[0].kind,
-        StoryboardElementKind::Video(StoryboardVideo { start_time }) if (-5678.0 - start_time).abs() < f64::EPSILON
+        ElementKind::Video(Video { start_time }) if (-5678.0 - start_time).abs() < f64::EPSILON
     ));
 
     assert_eq!(storyboard.earliest_event_time(), None);

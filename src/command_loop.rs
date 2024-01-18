@@ -2,9 +2,9 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::timeline_group::CommandTimelineGroup;
 
-/// Command loop of a [`StoryboardSprite`].
+/// Command loop of a [`Sprite`].
 ///
-/// [`StoryboardSprite`]: crate::element::StoryboardSprite
+/// [`Sprite`]: crate::element::Sprite
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandLoop {
     pub group: CommandTimelineGroup,

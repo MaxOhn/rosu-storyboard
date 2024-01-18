@@ -1,19 +1,19 @@
-use crate::element::{StoryboardElement, StoryboardElementInternal};
+use crate::element::{Element, ElementInternal};
 
 /// A layer of a [`Storyboard`].
 ///
 /// [`Storyboard`]: crate::Storyboard
 #[derive(Clone, Debug, PartialEq)]
-pub struct StoryboardLayer {
+pub struct Layer {
     pub depth: i32,
     pub masking: bool,
     pub visible_when_passing: bool,
     pub visible_when_failing: bool,
-    pub elements: Vec<StoryboardElement>,
+    pub elements: Vec<Element>,
 }
 
-impl StoryboardLayer {
-    /// Create a new [`StoryboardLayer`].
+impl Layer {
+    /// Create a new [`Layer`].
     pub fn new(depth: i32, masking: bool) -> Self {
         Self {
             depth,
@@ -22,13 +22,13 @@ impl StoryboardLayer {
         }
     }
 
-    /// Add a [`StoryboardElement`] to the layer.
-    pub fn add(&mut self, element: StoryboardElement) {
+    /// Add a [`Element`] to the layer.
+    pub fn add(&mut self, element: Element) {
         self.elements.push(element);
     }
 }
 
-impl Default for StoryboardLayer {
+impl Default for Layer {
     fn default() -> Self {
         Self {
             depth: Default::default(),
@@ -62,31 +62,27 @@ impl<'a> StoryLayer<'a> {
     }
 }
 
-pub(crate) struct StoryboardLayerInternal {
+pub(crate) struct LayerInternal {
     pub depth: i32,
     pub masking: bool,
     pub visible_when_passing: bool,
     pub visible_when_failing: bool,
-    pub elements: Vec<StoryboardElementInternal>,
+    pub elements: Vec<ElementInternal>,
 }
 
-impl From<StoryboardLayerInternal> for StoryboardLayer {
-    fn from(layer: StoryboardLayerInternal) -> Self {
+impl From<LayerInternal> for Layer {
+    fn from(layer: LayerInternal) -> Self {
         Self {
             depth: layer.depth,
             masking: layer.masking,
             visible_when_passing: layer.visible_when_passing,
             visible_when_failing: layer.visible_when_failing,
-            elements: layer
-                .elements
-                .into_iter()
-                .map(StoryboardElement::from)
-                .collect(),
+            elements: layer.elements.into_iter().map(Element::from).collect(),
         }
     }
 }
 
-impl StoryboardLayerInternal {
+impl LayerInternal {
     pub fn new(depth: i32, masking: bool) -> Self {
         Self {
             depth,
@@ -96,9 +92,9 @@ impl StoryboardLayerInternal {
     }
 }
 
-impl Default for StoryboardLayerInternal {
+impl Default for LayerInternal {
     fn default() -> Self {
-        let layer = StoryboardLayer::default();
+        let layer = Layer::default();
 
         Self {
             depth: layer.depth,

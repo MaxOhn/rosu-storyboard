@@ -19,7 +19,7 @@ pub use self::{
     command_loop::CommandLoop,
     command_trigger::CommandTrigger,
     decode::{ParseStoryboardError, StoryboardState},
-    layer::StoryboardLayer,
+    layer::Layer,
     storyboard::Storyboard,
     timeline::{CommandTimeline, ICommandTimeline},
     timeline_group::CommandTimelineGroup,

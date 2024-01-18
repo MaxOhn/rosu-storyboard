@@ -2,21 +2,21 @@ use rosu_map::util::Pos;
 
 use crate::visual::Anchor;
 
-use super::{StoryboardSprite, StoryboardSpriteInternal};
+use super::{Sprite, SpriteInternal};
 
-/// An animation [`StoryboardElement`].
+/// An animation [`Element`].
 ///
-/// [`StoryboardElement`]: crate::element::StoryboardElement
+/// [`Element`]: crate::element::Element
 #[derive(Clone, Debug, PartialEq)]
-pub struct StoryboardAnimation {
-    pub sprite: StoryboardSprite,
+pub struct Animation {
+    pub sprite: Sprite,
     pub frame_count: i32,
     pub frame_delay: f64,
     pub loop_kind: AnimationLoopType,
 }
 
-impl StoryboardAnimation {
-    /// Create a new [`StoryboardAnimation`].
+impl Animation {
+    /// Create a new [`Animation`].
     pub fn new(
         origin: Anchor,
         initial_pos: Pos,
@@ -25,7 +25,7 @@ impl StoryboardAnimation {
         loop_kind: AnimationLoopType,
     ) -> Self {
         Self {
-            sprite: StoryboardSprite::new(origin, initial_pos),
+            sprite: Sprite::new(origin, initial_pos),
             frame_count,
             frame_delay,
             loop_kind,
@@ -57,7 +57,7 @@ impl StoryboardAnimation {
     }
 }
 
-/// The loop type of a [`StoryboardAnimation`].
+/// The loop type of a [`Animation`].
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AnimationLoopType {
     LoopForever = 0,
@@ -77,15 +77,15 @@ impl AnimationLoopType {
     }
 }
 
-pub(crate) struct StoryboardAnimationInternal {
-    pub sprite: StoryboardSpriteInternal,
+pub(crate) struct AnimationInternal {
+    pub sprite: SpriteInternal,
     pub frame_count: i32,
     pub frame_delay: f64,
     pub loop_kind: AnimationLoopType,
 }
 
-impl From<StoryboardAnimationInternal> for StoryboardAnimation {
-    fn from(animation: StoryboardAnimationInternal) -> Self {
+impl From<AnimationInternal> for Animation {
+    fn from(animation: AnimationInternal) -> Self {
         Self {
             sprite: animation.sprite.into(),
             frame_count: animation.frame_count,
@@ -95,7 +95,7 @@ impl From<StoryboardAnimationInternal> for StoryboardAnimation {
     }
 }
 
-impl StoryboardAnimationInternal {
+impl AnimationInternal {
     pub fn new(
         origin: Anchor,
         initial_pos: Pos,
@@ -104,7 +104,7 @@ impl StoryboardAnimationInternal {
         loop_kind: AnimationLoopType,
     ) -> Self {
         Self {
-            sprite: StoryboardSpriteInternal::new(origin, initial_pos),
+            sprite: SpriteInternal::new(origin, initial_pos),
             frame_count,
             frame_delay,
             loop_kind,

@@ -8,8 +8,7 @@ use std::{
 use rosu_map::{section::events::EventType, util::StrExt};
 
 use crate::{
-    element::StoryboardElementKind, timeline::TypedCommand, visual::Origins, CommandTimelineGroup,
-    Storyboard,
+    element::ElementKind, timeline::TypedCommand, visual::Origins, CommandTimelineGroup, Storyboard,
 };
 
 impl Storyboard {
@@ -73,7 +72,7 @@ impl Storyboard {
             .values()
             .flat_map(|layer| layer.elements.iter())
             .filter_map(|elem| {
-                if let StoryboardElementKind::Video(ref video) = elem.kind {
+                if let ElementKind::Video(ref video) = elem.kind {
                     Some((elem.path.as_str(), video))
                 } else {
                     None
@@ -119,7 +118,7 @@ impl Storyboard {
 
         for (layer, elem) in elems {
             let sprite = match elem.kind {
-                StoryboardElementKind::Animation(ref animation) => {
+                ElementKind::Animation(ref animation) => {
                     writeln!(
                         writer,
                         "{},{layer},{},\"{}\",{},{},{},{},{}",
@@ -135,7 +134,7 @@ impl Storyboard {
 
                     &animation.sprite
                 }
-                StoryboardElementKind::Sprite(ref sprite) => {
+                ElementKind::Sprite(ref sprite) => {
                     writeln!(
                         writer,
                         "{},{layer},{},\"{}\",{},{}",
@@ -148,7 +147,7 @@ impl Storyboard {
 
                     sprite
                 }
-                StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => continue,
+                ElementKind::Sample(_) | ElementKind::Video(_) => continue,
             };
 
             write_group(writer, 1, &sprite.timeline_group)?;
@@ -200,7 +199,7 @@ impl Storyboard {
             })
             .flat_map(|(layer, int)| {
                 layer.elements.iter().filter_map(move |elem| {
-                    if let StoryboardElementKind::Sample(ref sample) = elem.kind {
+                    if let ElementKind::Sample(ref sample) = elem.kind {
                         Some((int, elem.path.as_str(), sample))
                     } else {
                         None

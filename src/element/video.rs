@@ -1,12 +1,12 @@
-/// A video [`StoryboardElement`].
+/// A video [`Element`].
 ///
-/// [`StoryboardElement`]: crate::element::StoryboardElement
+/// [`Element`]: crate::element::Element
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct StoryboardVideo {
+pub struct Video {
     pub start_time: f64,
 }
 
-impl StoryboardVideo {
+impl Video {
     pub const fn new(start_time: f64) -> Self {
         Self { start_time }
     }

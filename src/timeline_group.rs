@@ -26,7 +26,7 @@ impl CommandTimelineGroup {
         self.fold_timelines(false, |any, timeline| any || timeline.has_commands())
     }
 
-    /// The earlist start time of all commands.
+    /// The earliest start time of all commands.
     pub fn start_time(&self) -> f64 {
         self.fold_timelines(f64::MAX, |min, timeline| min.min(timeline.start_time()))
     }

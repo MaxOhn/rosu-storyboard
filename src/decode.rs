@@ -11,8 +11,8 @@ use rosu_map::{
 
 use crate::{
     element::{
-        AnimationLoopType, StoryboardAnimationInternal, StoryboardElementInternal,
-        StoryboardElementKindInternal, StoryboardSample, StoryboardSpriteInternal, StoryboardVideo,
+        AnimationInternal, AnimationLoopType, ElementInternal, ElementKindInternal, Sample,
+        SpriteInternal, Video,
     },
     layer::StoryLayer,
     storyboard::StoryboardInternal,
@@ -90,13 +90,13 @@ impl StoryboardState {
             ];
 
             if VIDEO_EXTENSIONS.contains(&extension) {
-                let video = StoryboardVideo::new(f64::from(offset));
+                let video = Video::new(f64::from(offset));
                 self.storyboard
                     .get_layer("Video")
                     .elements
-                    .push(StoryboardElementInternal {
+                    .push(ElementInternal {
                         path,
-                        kind: StoryboardElementKindInternal::Video(video),
+                        kind: ElementKindInternal::Video(video),
                     });
             } else {
                 self.background_file = path;
@@ -122,7 +122,7 @@ impl StoryboardState {
         let path = path.clean_filename();
         let x = f32::parse_with_limits(x, MAX_COORDINATE_VALUE as f32)?;
         let y = f32::parse_with_limits(y, MAX_COORDINATE_VALUE as f32)?;
-        let sprite = StoryboardSpriteInternal::new(origin, Pos::new(x, y));
+        let sprite = SpriteInternal::new(origin, Pos::new(x, y));
 
         if self.background_file.is_empty() {
             self.background_file = path.clone();
@@ -164,13 +164,8 @@ impl StoryboardState {
             AnimationLoopType::LoopForever
         };
 
-        let animation = StoryboardAnimationInternal::new(
-            origin,
-            Pos::new(x, y),
-            frame_count,
-            frame_delay,
-            loop_type,
-        );
+        let animation =
+            AnimationInternal::new(origin, Pos::new(x, y), frame_count, frame_delay, loop_type);
 
         self.sprite.set_animation(path, &layer, animation);
 
@@ -192,13 +187,13 @@ impl StoryboardState {
             100.0
         };
 
-        let sample = StoryboardSample::new(time, volume as i32);
+        let sample = Sample::new(time, volume as i32);
         self.storyboard
             .get_layer(layer.as_str())
             .elements
-            .push(StoryboardElementInternal {
+            .push(ElementInternal {
                 path,
-                kind: StoryboardElementKindInternal::Sample(sample),
+                kind: ElementKindInternal::Sample(sample),
             });
 
         Ok(())
@@ -815,10 +810,7 @@ impl DecodeBeatmap for Storyboard {
 // Prevent access of fields by abstracting through a module
 mod pending {
     use crate::{
-        element::{
-            StoryboardAnimationInternal, StoryboardElementInternal, StoryboardElementKindInternal,
-            StoryboardSpriteInternal,
-        },
+        element::{AnimationInternal, ElementInternal, ElementKindInternal, SpriteInternal},
         layer::StoryLayer,
         storyboard::StoryboardInternal,
     };
@@ -827,12 +819,7 @@ mod pending {
     pub struct PendingSprite(Option<PendingSpriteInner>);
 
     impl PendingSprite {
-        pub fn set_sprite(
-            &mut self,
-            path: String,
-            layer: &StoryLayer<'_>,
-            sprite: StoryboardSpriteInternal,
-        ) {
+        pub fn set_sprite(&mut self, path: String, layer: &StoryLayer<'_>, sprite: SpriteInternal) {
             self.0 = Some(PendingSpriteInner {
                 path,
                 layer: layer.as_str().into(),
@@ -844,7 +831,7 @@ mod pending {
             &mut self,
             path: String,
             layer: &StoryLayer<'_>,
-            animation: StoryboardAnimationInternal,
+            animation: AnimationInternal,
         ) {
             self.0 = Some(PendingSpriteInner {
                 path,
@@ -860,28 +847,28 @@ mod pending {
                 PendingSpriteKind::Animation(animation) => storyboard
                     .get_layer(inner.layer.as_ref())
                     .elements
-                    .push(StoryboardElementInternal {
+                    .push(ElementInternal {
                         path: inner.path,
-                        kind: StoryboardElementKindInternal::Animation(animation),
+                        kind: ElementKindInternal::Animation(animation),
                     }),
                 PendingSpriteKind::Sprite(sprite) => storyboard
                     .get_layer(inner.layer.as_ref())
                     .elements
-                    .push(StoryboardElementInternal {
+                    .push(ElementInternal {
                         path: inner.path,
-                        kind: StoryboardElementKindInternal::Sprite(sprite),
+                        kind: ElementKindInternal::Sprite(sprite),
                     }),
             }
         }
 
-        pub fn inner(&self) -> Option<&StoryboardSpriteInternal> {
+        pub fn inner(&self) -> Option<&SpriteInternal> {
             self.0.as_ref().map(|inner| match inner.kind {
                 PendingSpriteKind::Animation(ref animation) => &animation.sprite,
                 PendingSpriteKind::Sprite(ref sprite) => sprite,
             })
         }
 
-        pub fn inner_mut(&mut self) -> Option<&mut StoryboardSpriteInternal> {
+        pub fn inner_mut(&mut self) -> Option<&mut SpriteInternal> {
             self.0.as_mut().map(|inner| match inner.kind {
                 PendingSpriteKind::Animation(ref mut animation) => &mut animation.sprite,
                 PendingSpriteKind::Sprite(ref mut sprite) => sprite,
@@ -896,7 +883,7 @@ mod pending {
     }
 
     enum PendingSpriteKind {
-        Animation(StoryboardAnimationInternal),
-        Sprite(StoryboardSpriteInternal),
+        Animation(AnimationInternal),
+        Sprite(SpriteInternal),
     }
 }

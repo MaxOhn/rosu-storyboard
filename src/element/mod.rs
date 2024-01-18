@@ -1,9 +1,9 @@
-pub(crate) use self::{animation::StoryboardAnimationInternal, sprite::StoryboardSpriteInternal};
+pub(crate) use self::{animation::AnimationInternal, sprite::SpriteInternal};
 pub use self::{
-    animation::{AnimationLoopType, StoryboardAnimation},
-    sample::StoryboardSample,
-    sprite::StoryboardSprite,
-    video::StoryboardVideo,
+    animation::{Animation, AnimationLoopType},
+    sample::Sample,
+    sprite::Sprite,
+    video::Video,
 };
 
 mod animation;
@@ -15,13 +15,13 @@ mod video;
 ///
 /// [`Storyboard`]: crate::Storyboard
 #[derive(Clone, Debug, PartialEq)]
-pub struct StoryboardElement {
+pub struct Element {
     pub path: String,
-    pub kind: StoryboardElementKind,
+    pub kind: ElementKind,
 }
 
-impl StoryboardElement {
-    pub fn new(path: String, kind: impl Into<StoryboardElementKind>) -> Self {
+impl Element {
+    pub fn new(path: String, kind: impl Into<ElementKind>) -> Self {
         Self {
             path,
             kind: kind.into(),
@@ -41,18 +41,18 @@ impl StoryboardElement {
     }
 }
 
-/// Additional data for a [`StoryboardElement`].
+/// Additional data for a [`Element`].
 #[derive(Clone, Debug, PartialEq)]
-pub enum StoryboardElementKind {
-    Animation(StoryboardAnimation),
-    Sample(StoryboardSample),
-    Sprite(StoryboardSprite),
-    Video(StoryboardVideo),
+pub enum ElementKind {
+    Animation(Animation),
+    Sample(Sample),
+    Sprite(Sprite),
+    Video(Video),
 }
 
 macro_rules! from_elem_kind {
     ($from:ty, $variant:ident) => {
-        impl From<$from> for StoryboardElementKind {
+        impl From<$from> for ElementKind {
             fn from(from: $from) -> Self {
                 Self::$variant(from)
             }
@@ -60,65 +60,61 @@ macro_rules! from_elem_kind {
     };
 }
 
-from_elem_kind!(StoryboardAnimation, Animation);
-from_elem_kind!(StoryboardSample, Sample);
-from_elem_kind!(StoryboardSprite, Sprite);
-from_elem_kind!(StoryboardVideo, Video);
+from_elem_kind!(Animation, Animation);
+from_elem_kind!(Sample, Sample);
+from_elem_kind!(Sprite, Sprite);
+from_elem_kind!(Video, Video);
 
-impl StoryboardElementKind {
+impl ElementKind {
     pub fn is_drawable(&self) -> bool {
         match self {
-            StoryboardElementKind::Animation(ref elem) => elem.is_drawable(),
-            StoryboardElementKind::Sprite(ref elem) => elem.is_drawable(),
-            StoryboardElementKind::Sample(_) | StoryboardElementKind::Video(_) => true,
+            ElementKind::Animation(ref elem) => elem.is_drawable(),
+            ElementKind::Sprite(ref elem) => elem.is_drawable(),
+            ElementKind::Sample(_) | ElementKind::Video(_) => true,
         }
     }
 
     pub fn start_time(&self) -> f64 {
         match self {
-            StoryboardElementKind::Animation(elem) => elem.start_time(),
-            StoryboardElementKind::Sample(elem) => elem.start_time,
-            StoryboardElementKind::Sprite(elem) => elem.start_time(),
-            StoryboardElementKind::Video(elem) => elem.start_time,
+            ElementKind::Animation(elem) => elem.start_time(),
+            ElementKind::Sample(elem) => elem.start_time,
+            ElementKind::Sprite(elem) => elem.start_time(),
+            ElementKind::Video(elem) => elem.start_time,
         }
     }
 
     pub fn end_time(&self) -> f64 {
         match self {
-            StoryboardElementKind::Animation(elem) => elem.end_time(),
-            StoryboardElementKind::Sample(elem) => elem.start_time,
-            StoryboardElementKind::Sprite(elem) => elem.end_time(),
-            StoryboardElementKind::Video(elem) => elem.start_time,
+            ElementKind::Animation(elem) => elem.end_time(),
+            ElementKind::Sample(elem) => elem.start_time,
+            ElementKind::Sprite(elem) => elem.end_time(),
+            ElementKind::Video(elem) => elem.start_time,
         }
     }
 }
 
-pub(crate) struct StoryboardElementInternal {
+pub(crate) struct ElementInternal {
     pub path: String,
-    pub kind: StoryboardElementKindInternal,
+    pub kind: ElementKindInternal,
 }
 
-impl From<StoryboardElementInternal> for StoryboardElement {
-    fn from(elem: StoryboardElementInternal) -> Self {
+impl From<ElementInternal> for Element {
+    fn from(elem: ElementInternal) -> Self {
         Self {
             path: elem.path,
             kind: match elem.kind {
-                StoryboardElementKindInternal::Animation(elem) => {
-                    StoryboardElementKind::Animation(elem.into())
-                }
-                StoryboardElementKindInternal::Sample(elem) => StoryboardElementKind::Sample(elem),
-                StoryboardElementKindInternal::Sprite(elem) => {
-                    StoryboardElementKind::Sprite(elem.into())
-                }
-                StoryboardElementKindInternal::Video(elem) => StoryboardElementKind::Video(elem),
+                ElementKindInternal::Animation(elem) => ElementKind::Animation(elem.into()),
+                ElementKindInternal::Sample(elem) => ElementKind::Sample(elem),
+                ElementKindInternal::Sprite(elem) => ElementKind::Sprite(elem.into()),
+                ElementKindInternal::Video(elem) => ElementKind::Video(elem),
             },
         }
     }
 }
 
-pub(crate) enum StoryboardElementKindInternal {
-    Animation(StoryboardAnimationInternal),
-    Sample(StoryboardSample),
-    Sprite(StoryboardSpriteInternal),
-    Video(StoryboardVideo),
+pub(crate) enum ElementKindInternal {
+    Animation(AnimationInternal),
+    Sample(Sample),
+    Sprite(SpriteInternal),
+    Video(Video),
 }

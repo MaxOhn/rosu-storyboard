@@ -9,11 +9,11 @@ use crate::{
     visual::Anchor,
 };
 
-/// A sprite [`StoryboardElement`].
+/// A sprite [`Element`].
 ///
-/// [`StoryboardElement`]: crate::element::StoryboardElement
+/// [`Element`]: crate::element::Element
 #[derive(Clone, Debug, PartialEq)]
-pub struct StoryboardSprite {
+pub struct Sprite {
     pub origin: Anchor,
     pub initial_pos: Pos,
     pub timeline_group: CommandTimelineGroup,
@@ -21,8 +21,8 @@ pub struct StoryboardSprite {
     pub triggers: Vec<CommandTrigger>,
 }
 
-impl StoryboardSprite {
-    /// Create a new [`StoryboardSprite`].
+impl Sprite {
+    /// Create a new [`Sprite`].
     pub fn new(origin: Anchor, initial_pos: Pos) -> Self {
         Self {
             origin,
@@ -118,7 +118,7 @@ impl StoryboardSprite {
     }
 }
 
-pub(crate) struct StoryboardSpriteInternal {
+pub(crate) struct SpriteInternal {
     pub origin: Anchor,
     pub initial_pos: Pos,
     pub timeline_group: Rc<RefCell<CommandTimelineGroup>>,
@@ -126,8 +126,8 @@ pub(crate) struct StoryboardSpriteInternal {
     pub triggers: Vec<CommandTriggerInternal>,
 }
 
-impl From<StoryboardSpriteInternal> for StoryboardSprite {
-    fn from(sprite: StoryboardSpriteInternal) -> Self {
+impl From<SpriteInternal> for Sprite {
+    fn from(sprite: SpriteInternal) -> Self {
         Self {
             origin: sprite.origin,
             initial_pos: sprite.initial_pos,
@@ -144,7 +144,7 @@ impl From<StoryboardSpriteInternal> for StoryboardSprite {
     }
 }
 
-impl StoryboardSpriteInternal {
+impl SpriteInternal {
     pub fn new(origin: Anchor, initial_pos: Pos) -> Self {
         Self {
             origin,

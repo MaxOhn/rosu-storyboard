@@ -36,23 +36,18 @@
 )]
 
 pub use self::{
-    command_loop::CommandLoop,
-    command_trigger::CommandTrigger,
     decode::{ParseStoryboardError, StoryboardState},
     layer::Layer,
     storyboard::Storyboard,
-    timeline::{CommandTimeline, ICommandTimeline},
-    timeline_group::CommandTimelineGroup,
 };
 
-mod command_loop;
-mod command_trigger;
 mod decode;
 mod encode;
 mod layer;
 mod storyboard;
-mod timeline;
-mod timeline_group;
+
+/// Command types.
+pub mod command;
 
 /// Storyboard elements.
 pub mod element;

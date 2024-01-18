@@ -3,9 +3,10 @@ use std::{cell::RefCell, rc::Rc};
 use rosu_map::util::Pos;
 
 use crate::{
-    command_loop::{CommandLoop, CommandLoopInternal},
-    command_trigger::{CommandTrigger, CommandTriggerInternal},
-    timeline_group::CommandTimelineGroup,
+    command::{
+        CommandLoop, CommandLoopInternal, CommandTimelineGroup, CommandTrigger,
+        CommandTriggerInternal,
+    },
     visual::Anchor,
 };
 

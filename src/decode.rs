@@ -10,13 +10,13 @@ use rosu_map::{
 };
 
 use crate::{
+    command::CommandTimelineGroup,
     element::{
         AnimationInternal, AnimationLoopType, ElementInternal, ElementKindInternal, Sample,
         SpriteInternal, Video,
     },
     layer::StoryLayer,
     storyboard::StoryboardInternal,
-    timeline_group::CommandTimelineGroup,
     visual::{BlendingParameters, Easing, Origins},
     Storyboard,
 };

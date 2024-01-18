@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::timeline_group::CommandTimelineGroup;
+use super::CommandTimelineGroup;
 
 /// Command loop of a [`Sprite`].
 ///

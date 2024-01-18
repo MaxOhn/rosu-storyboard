@@ -1,9 +1,8 @@
 use rosu_map::{section::colors::Color, util::Pos};
 
-use crate::{
-    timeline::{CommandTimeline, ICommandTimeline},
-    visual::BlendingParameters,
-};
+use crate::visual::BlendingParameters;
+
+use super::{CommandTimeline, ICommandTimeline};
 
 /// Collections of [`CommandTimeline`].
 #[derive(Clone, Debug, Default, PartialEq)]

@@ -8,7 +8,10 @@ use std::{
 use rosu_map::{section::events::EventType, util::StrExt};
 
 use crate::{
-    element::ElementKind, timeline::TypedCommand, visual::Origins, CommandTimelineGroup, Storyboard,
+    command::{CommandTimelineGroup, TypedCommand},
+    element::ElementKind,
+    visual::Origins,
+    Storyboard,
 };
 
 impl Storyboard {

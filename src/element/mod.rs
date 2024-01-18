@@ -41,7 +41,7 @@ impl Element {
     }
 }
 
-/// Additional data for a [`Element`].
+/// Additional data for an [`Element`].
 #[derive(Clone, Debug, PartialEq)]
 pub enum ElementKind {
     Animation(Animation),

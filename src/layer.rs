@@ -22,7 +22,7 @@ impl Layer {
         }
     }
 
-    /// Add a [`Element`] to the layer.
+    /// Add an [`Element`] to the layer.
     pub fn add(&mut self, element: Element) {
         self.elements.push(element);
     }

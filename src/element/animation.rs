@@ -57,7 +57,7 @@ impl Animation {
     }
 }
 
-/// The loop type of a [`Animation`].
+/// The loop type of an [`Animation`].
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AnimationLoopType {
     LoopForever = 0,

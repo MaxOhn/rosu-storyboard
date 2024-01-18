@@ -23,7 +23,7 @@ use crate::{
 
 use self::pending::PendingSprite;
 
-/// All the ways that parsing a `.osu` file into [`Storyboard`] can fail.
+/// All the ways that parsing an osu! file into a [`Storyboard`] can fail.
 #[derive(Debug, thiserror::Error)]
 pub enum ParseStoryboardError {
     #[error("failed to parse event type")]

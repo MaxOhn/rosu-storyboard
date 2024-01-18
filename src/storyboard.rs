@@ -15,6 +15,7 @@ use crate::{
     layer::StoryboardLayer,
 };
 
+/// The storyboard of a beatmap.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Storyboard {
     pub format_version: i32,
@@ -34,6 +35,9 @@ impl Storyboard {
         rosu_map::from_path(path)
     }
 
+    /// Return the [`StoryboardLayer`] with the given name.
+    ///
+    /// If no layer has that name, a new one is created.
     // false positive
     #[allow(clippy::missing_panics_doc)]
     pub fn get_layer(&mut self, name: &str) -> &mut StoryboardLayer {
@@ -49,10 +53,14 @@ impl Storyboard {
         self.layers.entry(name.to_owned()).or_insert(layer)
     }
 
+    /// Return the [`StoryboardLayer`] with the given name.
+    ///
+    /// If no layer has that name, return `None`.
     pub fn try_get_layer(&self, name: &str) -> Option<&StoryboardLayer> {
         self.layers.get(name)
     }
 
+    /// Return an [`Iterator`] over all current [`StoryboardLayer`]s.
     pub fn layers(&self) -> Values<'_, String, StoryboardLayer> {
         self.layers.values()
     }

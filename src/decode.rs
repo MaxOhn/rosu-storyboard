@@ -16,7 +16,7 @@ use crate::{
     },
     layer::StoryLayer,
     timeline_group::CommandTimelineGroup,
-    visual::{BlendingParameters, Origins},
+    visual::{BlendingParameters, Easing, Origins},
     Storyboard,
 };
 
@@ -35,8 +35,9 @@ pub enum ParseStoryboardError {
     UnknownCommandType,
 }
 
+/// The parsing state for [`Storyboard`] in [`DecodeBeatmap`].
 pub struct StoryboardState {
-    pub storyboard: Storyboard,
+    storyboard: Storyboard,
     sprite: PendingSprite,
     timeline_group: Option<Rc<RefCell<CommandTimelineGroup>>>,
     variables: HashMap<Box<str>, Box<str>>,
@@ -265,7 +266,7 @@ impl StoryboardState {
     fn parse_alpha(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -296,7 +297,7 @@ impl StoryboardState {
     fn parse_scale(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -327,7 +328,7 @@ impl StoryboardState {
     fn parse_vector_scale(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -368,7 +369,7 @@ impl StoryboardState {
     fn parse_rotation(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -402,7 +403,7 @@ impl StoryboardState {
     fn parse_pos(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -444,7 +445,7 @@ impl StoryboardState {
     fn parse_x(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -475,7 +476,7 @@ impl StoryboardState {
     fn parse_y(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -506,7 +507,7 @@ impl StoryboardState {
     fn parse_color(
         &mut self,
         split: &mut Split<'_, char>,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         end_time: f64,
     ) -> Result<(), ParseStoryboardError> {
@@ -553,7 +554,7 @@ impl StoryboardState {
         Ok(())
     }
 
-    fn add_blending(&mut self, easing: i32, start_time: f64, end_time: f64) {
+    fn add_blending(&mut self, easing: Easing, start_time: f64, end_time: f64) {
         if let Some(ref group) = self.timeline_group {
             group.borrow_mut().blending_parameters.add(
                 easing,
@@ -569,7 +570,7 @@ impl StoryboardState {
         }
     }
 
-    fn add_flip_h(&mut self, easing: i32, start_time: f64, end_time: f64) {
+    fn add_flip_h(&mut self, easing: Easing, start_time: f64, end_time: f64) {
         if let Some(ref group) = self.timeline_group {
             group.borrow_mut().flip_h.add(
                 easing,
@@ -581,7 +582,7 @@ impl StoryboardState {
         }
     }
 
-    fn add_flip_v(&mut self, easing: i32, start_time: f64, end_time: f64) {
+    fn add_flip_v(&mut self, easing: Easing, start_time: f64, end_time: f64) {
         if let Some(ref group) = self.timeline_group {
             group.borrow_mut().flip_v.add(
                 easing,
@@ -699,7 +700,7 @@ impl DecodeBeatmap for Storyboard {
             return Err(ParseStoryboardError::InvalidLine);
         };
 
-        let easing = i32::parse(easing)?;
+        let easing = Easing::from(i32::parse(easing)?);
         let start_time = f64::parse(start_time)?;
 
         let end_time = if end_time.is_empty() {

@@ -10,6 +10,9 @@ mod sample;
 mod sprite;
 mod video;
 
+/// An element of a [`Storyboard`].
+///
+/// [`Storyboard`]: crate::Storyboard
 #[derive(Clone, Debug, PartialEq)]
 pub struct StoryboardElement {
     pub path: String,
@@ -37,6 +40,7 @@ impl StoryboardElement {
     }
 }
 
+/// Additional data for a [`StoryboardElement`].
 #[derive(Clone, Debug, PartialEq)]
 pub enum StoryboardElementKind {
     Animation(StoryboardAnimation),

@@ -4,6 +4,9 @@ use crate::visual::Anchor;
 
 use super::StoryboardSprite;
 
+/// An animation [`StoryboardElement`].
+///
+/// [`StoryboardElement`]: crate::element::StoryboardElement
 #[derive(Clone, Debug, PartialEq)]
 pub struct StoryboardAnimation {
     pub sprite: StoryboardSprite,
@@ -13,6 +16,7 @@ pub struct StoryboardAnimation {
 }
 
 impl StoryboardAnimation {
+    /// Create a new [`StoryboardAnimation`].
     pub fn new(
         origin: Anchor,
         initial_pos: Pos,
@@ -53,10 +57,11 @@ impl StoryboardAnimation {
     }
 }
 
+/// The loop type of a [`StoryboardAnimation`].
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AnimationLoopType {
-    LoopForever,
-    LoopOnce,
+    LoopForever = 0,
+    LoopOnce = 1,
 }
 
 impl AnimationLoopType {

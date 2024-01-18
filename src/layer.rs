@@ -1,5 +1,8 @@
 use crate::element::StoryboardElement;
 
+/// A layer of a [`Storyboard`].
+///
+/// [`Storyboard`]: crate::Storyboard
 #[derive(Clone, Debug, PartialEq)]
 pub struct StoryboardLayer {
     pub name: String,
@@ -11,6 +14,7 @@ pub struct StoryboardLayer {
 }
 
 impl StoryboardLayer {
+    /// Create a new [`StoryboardLayer`].
     pub fn new(name: String, depth: i32, masking: bool) -> Self {
         Self {
             name,
@@ -20,6 +24,7 @@ impl StoryboardLayer {
         }
     }
 
+    /// Add a [`StoryboardElement`] to the layer.
     pub fn add(&mut self, element: StoryboardElement) {
         self.elements.push(element);
     }

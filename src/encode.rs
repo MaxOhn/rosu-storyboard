@@ -13,6 +13,8 @@ use crate::{
 };
 
 impl Storyboard {
+    /// Encode a [`Storyboard`] into content of a `.osb` file and store it at
+    /// the given path.
     pub fn encode_to_path<P: AsRef<Path>>(&self, path: P) -> IoResult<()> {
         let file = File::create(path)?;
         let writer = BufWriter::new(file);
@@ -20,6 +22,8 @@ impl Storyboard {
         self.encode(writer)
     }
 
+    /// Encode a [`Storyboard`] into content of a `.osb` file and store it into
+    /// a [`String`].
     pub fn encode_to_string(&self) -> IoResult<String> {
         let mut writer = Vec::with_capacity(4096);
         self.encode(&mut writer)?;
@@ -27,6 +31,7 @@ impl Storyboard {
         String::from_utf8(writer).map_err(|e| IoError::new(ErrorKind::Other, e))
     }
 
+    /// Encode a [`Storyboard`] into content of a `.osb` file.
     pub fn encode<W: Write>(&self, mut writer: W) -> IoResult<()> {
         writeln!(writer, "osu file format v{}", self.format_version)?;
 
@@ -363,7 +368,7 @@ where
         writer,
         "{:>indent$}{acronym},{},{},{},",
         " ",
-        command.easing,
+        command.easing as u8,
         command.start_time,
         WriteEndTime::new(command),
     )

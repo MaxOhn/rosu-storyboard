@@ -28,14 +28,19 @@ pub use self::{
 mod command_loop;
 mod command_trigger;
 mod decode;
-pub mod element;
 mod encode;
 mod layer;
 mod storyboard;
 mod timeline;
 mod timeline_group;
+
+/// Storyboard elements.
+pub mod element;
+
+/// Visual elements.
 pub mod visual;
 
+/// Re-exported types of `rosu-map`.
 pub mod reexport {
     pub use rosu_map::{section::colors::Color, util::Pos};
 }

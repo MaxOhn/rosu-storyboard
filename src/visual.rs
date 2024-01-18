@@ -1,3 +1,4 @@
+/// Legacy [`Anchor`] type.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Origins {
     TopLeft,
@@ -72,6 +73,10 @@ impl From<Anchor> for Origins {
     }
 }
 
+/// General type to specify an "anchor" or "origin" point from the standard
+/// nine points on a rectangle.
+///
+/// x and y counterparts can be accessed using bitwise flags.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Anchor(pub u8);
 
@@ -97,6 +102,8 @@ impl Anchor {
     pub const BOTTOM_RIGHT: Self = Self(Self::Y2 | Self::X2);
 }
 
+/// Contains information about how a drawable element should be blended into
+/// its destination.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct BlendingParameters {
     /// The blending factor for the source color of the blend.
@@ -107,9 +114,9 @@ pub struct BlendingParameters {
     pub src_alpha: Blending,
     /// The blending factor for the destination alpha of the blend.
     pub dst_alpha: Blending,
-    /// Gets or sets the [`BlendingEquation`] to use for the RGB components of the blend.
+    /// The blending equation for the RGB components of the blend.
     pub rgb_equation: BlendingEquation,
-    /// Gets or sets the [`BlendingEquation`] to use for the alpha component of the blend.
+    /// The blending equation for the alpha component of the blend.
     pub alpha_equation: BlendingEquation,
 }
 
@@ -151,6 +158,7 @@ impl BlendingParameters {
     };
 }
 
+/// A blending type for [`BlendingParameters`].
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub enum Blending {
     #[default]
@@ -172,6 +180,7 @@ pub enum Blending {
     Zero,
 }
 
+/// A blending equation for [`BlendingParameters`].
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub enum BlendingEquation {
     /// Inherits from parent.
@@ -187,4 +196,62 @@ pub enum BlendingEquation {
     Subtract,
     /// Subtracts the source colour from the destination colour.
     ReverseSubtract,
+}
+
+macro_rules! define_easing {
+    ( $( $variant:ident = $discriminant:literal, )* ) => {
+        /// See <http://easings.net/> for more samples.
+        #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+        pub enum Easing {
+            $( $variant, )*
+        }
+
+        impl From<i32> for Easing {
+            fn from(value: i32) -> Self {
+                match value {
+                    $( $discriminant => Easing::$variant, )*
+                    _ => Easing::None,
+                }
+            }
+        }
+    }
+}
+
+define_easing! {
+    None = 0,
+    Out = 1,
+    In = 2,
+    InQuad = 3,
+    OutQuad = 4,
+    InOutQuad = 5,
+    InCubic = 6,
+    OutCubic = 7,
+    InOutCubic = 8,
+    InQuart = 9,
+    OutQuart = 10,
+    InOutQuart = 11,
+    InQuint = 12,
+    OutQuint = 13,
+    InOutQuint = 14,
+    InSine = 15,
+    OutSine = 16,
+    InOutSine = 17,
+    InExpo = 18,
+    OutExpo = 19,
+    InOutExpo = 20,
+    InCirc = 21,
+    OutCirc = 22,
+    InOutCirc = 23,
+    InElastic = 24,
+    OutElastic = 25,
+    OutElasticHalf = 26,
+    OutElasticQuarter = 27,
+    InOutElastic = 28,
+    InBack = 29,
+    OutBack = 30,
+    InOutBack = 31,
+    InBounce = 32,
+    OutBounce = 33,
+    InOutBounce = 34,
+    OutPow10 = 35,
 }

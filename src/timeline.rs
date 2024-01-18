@@ -1,3 +1,6 @@
+use crate::visual::Easing;
+
+/// A timeline of commands.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandTimeline<T> {
     pub start_time: f64,
@@ -14,9 +17,10 @@ impl<T: Default> CommandTimeline<T> {
 }
 
 impl<T: Copy> CommandTimeline<T> {
+    /// Add a command to the timeline.
     pub fn add(
         &mut self,
-        easing: i32,
+        easing: Easing,
         start_time: f64,
         mut end_time: f64,
         start_value: T,
@@ -60,13 +64,14 @@ impl<T: Default> Default for CommandTimeline<T> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct TypedCommand<T> {
-    pub(crate) easing: i32,
+    pub(crate) easing: Easing,
     pub(crate) start_time: f64,
     pub(crate) end_time: f64,
     pub(crate) start_value: T,
     pub(crate) end_value: T,
 }
 
+/// Interface of [`CommandTimeline`] without its generic type.
 pub trait ICommandTimeline {
     fn start_time(&self) -> f64;
     fn end_time(&self) -> f64;

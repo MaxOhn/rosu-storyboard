@@ -7,6 +7,9 @@ use crate::{
     timeline_group::CommandTimelineGroup, visual::Anchor,
 };
 
+/// A sprite [`StoryboardElement`].
+///
+/// [`StoryboardElement`]: crate::element::StoryboardElement
 #[derive(Clone, Debug, PartialEq)]
 pub struct StoryboardSprite {
     pub origin: Anchor,
@@ -17,6 +20,7 @@ pub struct StoryboardSprite {
 }
 
 impl StoryboardSprite {
+    /// Create a new [`StoryboardSprite`].
     pub fn new(origin: Anchor, initial_pos: Pos) -> Self {
         Self {
             origin,
@@ -88,6 +92,7 @@ impl StoryboardSprite {
             })
     }
 
+    /// Add a [`CommandLoop`] to the sprite.
     // false positive
     #[allow(clippy::missing_panics_doc)]
     pub fn add_loop(&mut self, start_time: f64, repeat_count: u32) -> &mut CommandLoop {
@@ -97,6 +102,7 @@ impl StoryboardSprite {
         self.loops.last_mut().unwrap()
     }
 
+    /// Add a [`CommandTrigger`] to the sprite.
     // false positive
     #[allow(clippy::missing_panics_doc)]
     pub fn add_trigger(

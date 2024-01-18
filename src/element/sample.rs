@@ -1,3 +1,6 @@
+/// A sample [`StoryboardElement`].
+///
+/// [`StoryboardElement`]: crate::element::StoryboardElement
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct StoryboardSample {
     pub start_time: f64,

@@ -2,6 +2,9 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::timeline_group::CommandTimelineGroup;
 
+/// Command loop of a [`StoryboardSprite`].
+///
+/// [`StoryboardSprite`]: crate::element::StoryboardSprite
 #[derive(Clone, Debug, PartialEq)]
 pub struct CommandLoop {
     pub group: Rc<RefCell<CommandTimelineGroup>>,
@@ -10,6 +13,7 @@ pub struct CommandLoop {
 }
 
 impl CommandLoop {
+    /// Create a new [`CommandLoop`].
     pub fn new(start_time: f64, repeat_count: u32) -> Self {
         Self {
             group: Rc::new(RefCell::new(CommandTimelineGroup::default())),

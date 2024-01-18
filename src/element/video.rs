@@ -1,3 +1,6 @@
+/// A video [`StoryboardElement`].
+///
+/// [`StoryboardElement`]: crate::element::StoryboardElement
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct StoryboardVideo {
     pub start_time: f64,

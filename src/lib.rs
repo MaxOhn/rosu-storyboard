@@ -7,13 +7,13 @@
 //!
 //! ```
 //! use rosu_storyboard::Storyboard;
-//! use rosu_storyboard::elements::ElementKind;
+//! use rosu_storyboard::element::ElementKind;
 //!
 //! let path = "./resources/Himeringo - Yotsuya-san ni Yoroshiku (RLC) [Winber1's Extreme].osu";
 //! let storyboard = Storyboard::from_path(path).unwrap();
 //!
 //! let first_bg_elem = &storyboard.layers["Background"].elements[0];
-//! assert!(first_bg_elem.kind, ElementKind::Sprite(_));
+//! assert!(matches!(first_bg_elem.kind, ElementKind::Sprite(_)));
 //! ```
 //!
 //! [osu!]: https://osu.ppy.sh/

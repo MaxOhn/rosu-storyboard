@@ -52,11 +52,18 @@ impl Storyboard {
     }
 
     fn encode_events<W: Write>(&self, writer: &mut W) -> IoResult<()> {
-        writer.write_all(
-            b"[Events]
-//Background and Video events
-",
-        )?;
+        writer.write_all(b"[Events]\n")?;
+
+        self.encode_background_and_video(writer)?;
+        self.encode_breaks(writer)?;
+        self.encode_layers(writer)?;
+        self.encode_samples(writer)?;
+
+        Ok(())
+    }
+
+    fn encode_background_and_video<W: Write>(&self, writer: &mut W) -> IoResult<()> {
+        writer.write_all(b"//Background and Video events\n")?;
 
         if !self.background_file.is_empty() {
             writeln!(
@@ -88,6 +95,10 @@ impl Storyboard {
             )?;
         }
 
+        Ok(())
+    }
+
+    fn encode_breaks<W: Write>(&self, writer: &mut W) -> IoResult<()> {
         writer.write_all(b"//Break Periods\n")?;
 
         for b in self.breaks.iter() {
@@ -99,6 +110,12 @@ impl Storyboard {
                 b.end_time
             )?;
         }
+
+        Ok(())
+    }
+
+    fn encode_layers<W: Write>(&self, writer: &mut W) -> IoResult<()> {
+        writer.write_all(b"//Storyboard layers\n")?;
 
         let elems = self
             .layers
@@ -181,6 +198,10 @@ impl Storyboard {
             }
         }
 
+        Ok(())
+    }
+
+    fn encode_samples<W: Write>(&self, writer: &mut W) -> IoResult<()> {
         writer.write_all(b"//Storyboard Sound Samples\n")?;
 
         let samples = self

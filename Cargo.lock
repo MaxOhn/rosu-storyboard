@@ -115,6 +115,8 @@ checksum = "c08c74e62047bb2de4ff487b251e4a92e24f48745648451635cec7d591162d9f"
 [[package]]
 name = "rosu-map"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9171d761eb3666e432148bd18262b8d8248a6b82ce818465f50c2fd16e2adf20"
 dependencies = [
  "thiserror",
  "tracing",

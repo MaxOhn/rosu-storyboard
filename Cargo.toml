@@ -12,9 +12,9 @@ keywords = ["osu", "storyboard", "parse", "decode"]
 categories = ["parser-implementations"]
 
 [dependencies]
-rosu-map = { path = "../rosu-map" }
+rosu-map = { version = "0.1.0" }
 thiserror = { version = "1.0.50" }
 
 [dev-dependencies]
-rosu-map = { path = "../rosu-map", features = ["tracing"] }
+rosu-map = { version = "0.1.0", features = ["tracing"] }
 test-log = { version = "0.2.14", default-features = false, features = ["trace"] }

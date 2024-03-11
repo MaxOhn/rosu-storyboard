@@ -13,7 +13,6 @@ categories = ["parser-implementations"]
 
 [dependencies]
 rosu-map = { version = "0.1.0" }
-thiserror = { version = "1.0.50" }
 
 [dev-dependencies]
 rosu-map = { version = "0.1.0", features = ["tracing"] }

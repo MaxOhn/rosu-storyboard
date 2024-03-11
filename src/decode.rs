@@ -1,4 +1,4 @@
-use std::{borrow::Cow, cell::RefCell, cmp, collections::HashMap, rc::Rc, str::Split};
+use std::{borrow::Cow, cell::RefCell, cmp, collections::HashMap, error, fmt, rc::Rc, str::Split};
 
 use rosu_map::{
     section::{
@@ -24,16 +24,47 @@ use crate::{
 use self::pending::PendingSprite;
 
 /// All the ways that parsing an osu! file into a [`Storyboard`] can fail.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum ParseStoryboardError {
-    #[error("failed to parse event type")]
-    EventType(#[from] ParseEventTypeError),
-    #[error("invalid line")]
+    EventType(ParseEventTypeError),
     InvalidLine,
-    #[error("failed to parse number")]
-    Number(#[from] ParseNumberError),
-    #[error("unknown command type")]
+    Number(ParseNumberError),
     UnknownCommandType,
+}
+
+impl error::Error for ParseStoryboardError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            ParseStoryboardError::EventType(err) => Some(err),
+            ParseStoryboardError::Number(err) => Some(err),
+            ParseStoryboardError::InvalidLine | ParseStoryboardError::UnknownCommandType => None,
+        }
+    }
+}
+
+impl fmt::Display for ParseStoryboardError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Self::EventType(_) => "failed to parse event type",
+            Self::InvalidLine => "invalid line",
+            Self::Number(_) => "failed to parse number",
+            Self::UnknownCommandType => "unknown command type",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl From<ParseEventTypeError> for ParseStoryboardError {
+    fn from(err: ParseEventTypeError) -> Self {
+        Self::EventType(err)
+    }
+}
+
+impl From<ParseNumberError> for ParseStoryboardError {
+    fn from(err: ParseNumberError) -> Self {
+        Self::Number(err)
+    }
 }
 
 /// The parsing state for [`Storyboard`] in [`DecodeBeatmap`].

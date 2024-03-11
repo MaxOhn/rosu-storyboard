@@ -12,7 +12,7 @@ keywords = ["osu", "storyboard", "parse", "decode"]
 categories = ["parser-implementations"]
 
 [dependencies]
-rosu-map = { version = "0.1.0" }
+rosu-map = { version = "0.1.1" }
 
 [dev-dependencies]
 rosu-map = { version = "0.1.0", features = ["tracing"] }
